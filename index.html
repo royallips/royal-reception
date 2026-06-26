@@ -123,6 +123,8 @@
   .viewer{position:fixed;inset:0;z-index:50;background:#0E1F18;display:none;align-items:center;justify-content:center;}
   .viewer.show{display:flex;}
   .viewer img{max-width:100%;max-height:100%;object-fit:contain;}
+  #viewerBody{transition:opacity .15s;}
+  #viewerBody.fade{opacity:0;}
   .viewer .vph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;}
   .viewer .vph .big{font-size:120px;font-weight:800;}
   .viewer .vname{position:absolute;bottom:36px;left:0;right:0;text-align:center;color:#fff;
@@ -166,7 +168,8 @@
 <main id="main"></main>
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
 
-<div class="viewer" id="viewer" onclick="closeViewer()">
+<div class="viewer" id="viewer"
+  onpointerdown="viewerPD(event)" onpointerup="viewerPU(event)">
   <button class="close" onclick="closeViewer(event)">✕</button>
   <div id="viewerBody"></div>
   <div id="vSwitch" class="vSwitch"></div>
@@ -493,14 +496,35 @@ function closeConfirm(){ document.getElementById('confirmModal').classList.remov
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
 /* ===== 全画面ビューア ===== */
-let viewerCastId=null;
+let viewerCastId=null, viewerList=[], vs=null;
 const photo2Cache={};
 function showPhoto(id){
   if(suppressClick){ suppressClick=false; return; }
   const c=find(id); if(!c)return;
   viewerCastId=id;
+  viewerList=mode==='customer'
+    ? casts.filter(c=>c.shown&&!c.sold).sort((a,b)=>a.name.localeCompare(b.name,'ja'))
+    : [];
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
+}
+function viewerPD(e){
+  if(e.target.closest('button')) return;
+  vs={x0:e.clientX, y0:e.clientY, pid:e.pointerId};
+}
+function viewerPU(e){
+  if(!vs || e.pointerId!==vs.pid) return;
+  const dx=e.clientX-vs.x0, dy=e.clientY-vs.y0; vs=null;
+  if(Math.abs(dx)<12 && Math.abs(dy)<12){ closeViewer(); return; }
+  if(Math.abs(dx)>Math.abs(dy)*1.5 && Math.abs(dx)>50 && viewerList.length>1){
+    const i=viewerList.findIndex(c=>c.id===viewerCastId);
+    const next=dx<0 ? viewerList[i+1] : viewerList[i-1];
+    if(next){
+      const body=document.getElementById('viewerBody');
+      body.classList.add('fade');
+      setTimeout(()=>{ viewerCastId=next.id; renderViewerPhoto(next,0); body.classList.remove('fade'); },150);
+    }
+  }
 }
 function renderViewerPhoto(c,idx){
   const body=document.getElementById('viewerBody');
