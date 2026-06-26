@@ -162,6 +162,7 @@
 </header>
 
 <main id="main"></main>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
 
 <div class="viewer" id="viewer" onclick="closeViewer()">
   <button class="close" onclick="closeViewer(event)">✕</button>
@@ -250,6 +251,31 @@ function load(){
   casts=SAMPLE; save();
 }
 function save(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(casts)); }catch(e){} }
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(casts,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='royal_casts_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function importData(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error();
+      for(const c of data){
+        if(!c.photos) c.photos=[c.photo||''];
+        if(c.photoIdx==null) c.photoIdx=0;
+      }
+      if(!confirm(`${data.length}件のデータを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+      casts=data; save(); render();
+    }catch(err){ alert('読み込みに失敗しました。正しいファイルか確認してください。'); }
+  };
+  reader.readAsText(file);
+}
 
 function tint(name){ let h=0; for(const ch of name) h=(h*31+ch.charCodeAt(0))%360;
   return `linear-gradient(150deg,hsl(${h} 42% 46%),hsl(${(h+28)%360} 46% 34%))`; }
@@ -347,6 +373,8 @@ function renderSettings(){
   const list=[...casts].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html='<div class="setWrap"><div class="setHead"><h2>キャスト登録</h2>'
     +'<div style="margin-left:auto;display:flex;gap:8px">'
+    +'<button class="btn ghost" onclick="exportData()">書き出し</button>'
+    +'<button class="btn ghost" onclick="document.getElementById(\'importFile\').value=\'\';document.getElementById(\'importFile\').click()">読み込み</button>'
     +'<button class="btn ghost" onclick="openBulk()">まとめて登録</button>'
     +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div></div>';
   if(list.length===0){
