@@ -127,6 +127,10 @@
     font-size:30px;font-weight:700;text-shadow:0 2px 10px rgba(0,0,0,.6);letter-spacing:.04em;}
   .viewer .close{position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:50%;
     background:rgba(255,255,255,.15);color:#fff;font-size:22px;}
+  .vSwitch{position:absolute;bottom:88px;left:0;right:0;display:none;justify-content:center;gap:12px;}
+  .vSwitch button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);
+    color:#fff;font-size:16px;font-weight:800;border:2px solid rgba(255,255,255,.4);}
+  .vSwitch button.active{background:rgba(255,255,255,.88);color:var(--wine);border-color:#fff;}
 
   /* モーダル */
   .modal{position:fixed;inset:0;z-index:60;background:rgba(20,8,14,.55);display:none;align-items:center;justify-content:center;padding:20px;}
@@ -162,6 +166,7 @@
 <div class="viewer" id="viewer" onclick="closeViewer()">
   <button class="close" onclick="closeViewer(event)">✕</button>
   <div id="viewerBody"></div>
+  <div id="vSwitch" class="vSwitch"></div>
 </div>
 
 <div class="modal" id="editModal">
@@ -465,13 +470,37 @@ function closeConfirm(){ document.getElementById('confirmModal').classList.remov
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
 /* ===== 全画面ビューア ===== */
+let viewerCastId=null;
 function showPhoto(id){
   if(suppressClick){ suppressClick=false; return; }
-  const c=find(id); if(!c)return; const body=document.getElementById('viewerBody');
-  const media=c.photo?`<img src="${esc(c.photo)}" alt="">`
+  const c=find(id); if(!c)return;
+  viewerCastId=id;
+  renderViewerPhoto(c,0);
+  document.getElementById('viewer').classList.add('show');
+}
+function renderViewerPhoto(c,idx){
+  const body=document.getElementById('viewerBody');
+  const sw=document.getElementById('vSwitch');
+  const p1=c.photo||'';
+  const p2=c.gid?(PHOTO_BASE+c.gid+'_2.jpg'):'';
+  const url=idx===1?p2:p1;
+  const onerr=idx===1?'onerror="switchViewerPhoto(0)"':'';
+  const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
   body.innerHTML=media+`<div class="vname">${esc(c.name)}</div>`;
-  document.getElementById('viewer').classList.add('show'); }
+  if(p2){
+    sw.innerHTML=
+      `<button class="${idx===0?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(0)">①</button>`+
+      `<button class="${idx===1?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(1)">②</button>`;
+    sw.style.display='flex';
+  } else {
+    sw.style.display='none';
+  }
+}
+function switchViewerPhoto(idx){
+  const c=find(viewerCastId); if(!c)return;
+  renderViewerPhoto(c,idx);
+}
 function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
 
 /* ===== 長押しドラッグで「戻す」 ===== */
