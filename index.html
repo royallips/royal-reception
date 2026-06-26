@@ -37,7 +37,7 @@
   .returnZone.over{background:var(--wine);border-color:var(--wine);color:#fff;transform:scale(1.05);}
 
   .grid{display:grid;gap:14px;padding:14px 18px 18px;grid-template-columns:repeat(3,1fr);}
-  .card{position:relative;aspect-ratio:595/842;border-radius:16px;overflow:hidden;background:#ddd;
+  .card{position:relative;aspect-ratio:595/842;width:100%;border-radius:16px;overflow:hidden;background:#ddd;
     box-shadow:0 4px 14px rgba(58,15,30,.10);transition:transform .12s;border:1px solid rgba(0,0,0,.04);}
   .card:active{transform:scale(.97);}
   .card .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -58,7 +58,7 @@
   /* スタッフ用：4列の選択グリッド */
   .pickWrap{padding:12px 12px 84px;}
   .pickGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .pcard{position:relative;aspect-ratio:595/842;border-radius:11px;overflow:hidden;background:#ddd;
+  .pcard{position:relative;aspect-ratio:595/842;width:100%;border-radius:11px;overflow:hidden;background:#ddd;
     border:2px solid transparent;transition:transform .1s;}
   .pcard:active{transform:scale(.96);}
   .pcard .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -105,9 +105,9 @@
   .bulkArea:focus{outline:none;border-color:var(--wine);}
 
   .setGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
-  .scard{cursor:pointer;}
-  .sthumb{position:relative;aspect-ratio:595/842;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
-  .sthumb img{width:100%;height:100%;object-fit:cover;}
+  .scard{cursor:pointer;min-width:0;}
+  .sthumb{position:relative;aspect-ratio:595/842;width:100%;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
+  .sthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .sthumb .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:700;}
   .sthumb .soldtag{position:absolute;top:5px;left:5px;background:var(--danger);color:#fff;
     font-size:10px;font-weight:800;border-radius:6px;padding:2px 6px;}
