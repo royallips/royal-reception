@@ -421,28 +421,30 @@ async function syncCityHeaven(){
   const btn=document.getElementById('chSyncBtn');
   if(btn){btn.disabled=true;btn.textContent='取得中...';}
   try{
-    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(CH_ATTEND);
-    const res=await fetch(proxy,{cache:'no-store'});
-    if(!res.ok) throw new Error();
-    const {contents}=await res.json();
-    if(!contents) throw new Error();
-
-    const doc=new DOMParser().parseFromString(contents,'text/html');
-    const girlidSet=new Set();
-    doc.querySelectorAll('a[href*="girlid-"]').forEach(a=>{
-      const m=(a.getAttribute('href')||'').match(/girlid-(\d+)/);
-      if(m) girlidSet.add(m[1]);
-    });
-
-    if(girlidSet.size===0){alert('出勤キャストが見つかりませんでした');return;}
-
+    const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('not found');
+    const data=await res.json();
+    const girlidList=data.girlidList||[];
+    if(girlidList.length===0){
+      alert('出勤データがまだありません。\nGitHub ActionsのActions画面から「Sync City Heaven Attendance」を手動実行してください。');
+      const b=document.getElementById('chSyncBtn');
+      if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
+      return;
+    }
     draft=new Set();
     for(const c of casts){
-      if(c.gid&&girlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
+      if(c.gid&&girlidList.includes(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
     }
     paintStaff();
+    if(data.updated){
+      const t=new Date(data.updated);
+      const hh=String(t.getHours()).padStart(2,'0');
+      const mm=String(t.getMinutes()).padStart(2,'0');
+      const b=document.getElementById('chSyncBtn');
+      if(b){b.textContent=`同期済 ${hh}:${mm}`;b.disabled=false;}
+    }
   }catch(e){
-    alert('シティヘブンの取得に失敗しました。\nネットワーク接続を確認してください。');
+    alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
     const b=document.getElementById('chSyncBtn');
     if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
   }
