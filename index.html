@@ -48,12 +48,21 @@
   .card .name{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;
     font-size:23px;font-weight:700;letter-spacing:.03em;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 
-  .dragClone{position:fixed;width:130px;aspect-ratio:595/842;border-radius:12px;overflow:hidden;
-    transform:translate(-50%,-50%);opacity:.9;pointer-events:none;z-index:70;box-shadow:0 12px 32px rgba(0,0,0,.45);}
-  .dragClone img{width:100%;height:100%;object-fit:cover;}
-  .dragClone .cl-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:48px;font-weight:700;}
-  body.dragging{overflow:hidden;}
-  body.dragging .card{transition:none;}
+  .card .selCheck{position:absolute;top:7px;left:7px;width:26px;height:26px;border-radius:50%;
+    background:var(--gold);color:#fff;font-size:14px;font-weight:900;
+    display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);}
+  .card.sel .selCheck{display:flex;}
+  .card.sel{box-shadow:0 0 0 3px var(--gold),0 4px 14px rgba(58,15,30,.10);}
+  .selBar{position:fixed;bottom:0;left:0;right:0;z-index:40;
+    background:var(--wine);padding:14px 18px 32px;display:none;
+    flex-direction:column;gap:10px;box-shadow:0 -4px 20px rgba(0,0,0,.25);}
+  .selBar.show{display:flex;}
+  .selBar .selInfo{color:rgba(255,255,255,.65);font-size:13px;font-weight:700;}
+  .selBar .selActions{display:flex;gap:10px;}
+  .selBar .selReturn{flex:1;background:var(--gold);color:#fff;border-radius:12px;
+    padding:14px;font-size:16px;font-weight:800;border:none;cursor:pointer;}
+  .selBar .selCancel{background:rgba(255,255,255,.15);color:#fff;border-radius:12px;
+    padding:14px 20px;font-size:14px;font-weight:700;border:none;cursor:pointer;}
 
   /* スタッフ用：4列の選択グリッド */
   .pickWrap{padding:12px 12px 84px;}
@@ -167,6 +176,13 @@
 
 <main id="main"></main>
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+<div class="selBar" id="selBar">
+  <div class="selInfo"></div>
+  <div class="selActions">
+    <button class="selCancel" onclick="cancelSel()">キャンセル</button>
+    <button class="selReturn" onclick="returnSelected()">↩ 戻す</button>
+  </div>
+</div>
 
 <div class="viewer" id="viewer"
   onpointerdown="viewerPD(event)" onpointerup="viewerPU(event)">
@@ -294,11 +310,11 @@ function render(){
 
 /* ===== お客様用（横3列・フリーなし） ===== */
 function renderCustomer(){
+  cancelSel();
   const list=casts.filter(c=>c.shown&&!c.sold)
-    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));  // あいうえお順
+    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html=`<div class="custBar">
       <button class="resetBtn" onclick="resetCustomer()">リセット</button>
-      <div class="returnZone" id="returnZone"><span class="ic">↩</span>戻す</div>
     </div>`;
   html+='<div class="grid">';
   for(const c of list) html+=custCardHTML(c);
@@ -310,7 +326,7 @@ function custCardHTML(c){
   const inner=c.photo
     ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  return `<div class="card" data-id="${esc(c.id)}" onclick='showPhoto(${JSON.stringify(c.id)})'>${inner}</div>`;
+  return `<div class="card" data-id="${esc(c.id)}">${inner}<div class="selCheck">✓</div></div>`;
 }
 function resetCustomer(){
   for(const c of casts) c.shown=false;
@@ -407,7 +423,7 @@ function renderSettings(){
   document.getElementById('main').innerHTML=html;
 }
 
-function setMode(m){ mode=m; closeViewer(); render(); }
+function setMode(m){ mode=m; closeViewer(); cancelSel(); render(); }
 
 /* 写真切り替え */
 function switchPhoto(id, idx){
@@ -558,9 +574,10 @@ function switchViewerPhoto(idx){
 }
 function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
 
-/* ===== 長押しドラッグで「戻す」（Pointer Events） ===== */
-let g=null, clone=null;
+/* ===== 長押しで選択モード ===== */
+let g=null;
 const LP_MS=350, MOVE_CANCEL=20;
+let selMode=false, selSet=new Set();
 
 function attachDnd(){
   document.querySelectorAll('.card[data-id]').forEach(card=>{
@@ -572,65 +589,56 @@ function attachDnd(){
   });
 }
 function gestureStart(e, id){
-  if(g){ clearTimeout(g.lp); if(g.dragging) endDrag(); }
+  if(g) clearTimeout(g.lp);
   const x=e.clientX, y=e.clientY;
-  g={id, x0:x, y0:y, pid:e.pointerId, dragging:false,
-     lp:setTimeout(()=>startDrag(x,y), LP_MS)};
+  g={id, x0:x, y0:y, pid:e.pointerId,
+     lp:setTimeout(()=>{ if(navigator.vibrate) navigator.vibrate(18); enterSelMode(id); g=null; }, LP_MS)};
 }
 function gestureMove(e){
   if(!g || e.pointerId!==g.pid) return;
-  if(!g.dragging){
-    if(Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>MOVE_CANCEL){ clearTimeout(g.lp); g=null; }
-    return;
-  }
-  e.preventDefault();
-  moveClone(e.clientX, e.clientY);
-  zoneCheck(e.clientX, e.clientY);
+  if(Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>MOVE_CANCEL){ clearTimeout(g.lp); g=null; }
 }
 function gestureEnd(e){
   if(!g || e.pointerId!==g.pid) return;
   clearTimeout(g.lp);
-  if(g.dragging){
-    const drop=zoneCheck(e.clientX, e.clientY);
-    endDrag();
-    suppressClick=true;
-    const id=g.id; g=null;
-    if(drop) removeFromCustomer(id);
-  } else { g=null; }
-}
-function startDrag(x,y){
-  if(!g) return;
-  g.dragging=true;
-  const c=find(g.id);
-  clone=document.createElement('div');
-  clone.className='dragClone';
-  clone.innerHTML=c.photo?`<img src="${esc(c.photo)}">`
-    :`<div class="cl-ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  document.body.appendChild(clone);
-  document.body.classList.add('dragging');
-  const z=document.getElementById('returnZone'); if(z) z.classList.add('armed');
-  moveClone(x,y);
-  if(navigator.vibrate) navigator.vibrate(18);
-}
-function moveClone(x,y){ if(clone){ clone.style.left=x+'px'; clone.style.top=y+'px'; } }
-function zoneCheck(x,y){
-  const z=document.getElementById('returnZone'); if(!z) return false;
-  const r=z.getBoundingClientRect();
-  const inside=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
-  z.classList.toggle('over',inside);
-  return inside;
-}
-function endDrag(){
-  if(clone){ clone.remove(); clone=null; }
-  document.body.classList.remove('dragging');
-  const z=document.getElementById('returnZone'); if(z){ z.classList.remove('armed','over'); }
+  const moved=Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>10;
+  const id=g.id; g=null;
+  if(!moved){ if(selMode) custToggleSel(id); else showPhoto(id); }
 }
 document.addEventListener('pointermove', gestureMove, {passive:false});
 document.addEventListener('pointerup', gestureEnd);
 document.addEventListener('pointercancel', e=>{
   if(!g || e.pointerId!==g.pid) return;
-  clearTimeout(g.lp); if(g.dragging) endDrag(); g=null;
+  clearTimeout(g.lp); g=null;
 });
+
+function enterSelMode(id){
+  selMode=true; selSet=new Set([id]); updateSelUI();
+}
+function custToggleSel(id){
+  if(selSet.has(id)) selSet.delete(id); else selSet.add(id);
+  if(selSet.size===0){ cancelSel(); return; }
+  updateSelUI();
+}
+function cancelSel(){
+  selMode=false; selSet.clear();
+  document.querySelectorAll('.card.sel').forEach(el=>el.classList.remove('sel'));
+  const bar=document.getElementById('selBar'); if(bar) bar.classList.remove('show');
+}
+function updateSelUI(){
+  document.querySelectorAll('.card[data-id]').forEach(el=>{
+    el.classList.toggle('sel', selSet.has(el.dataset.id));
+  });
+  const bar=document.getElementById('selBar');
+  bar.querySelector('.selInfo').textContent=`${selSet.size}件選択中`;
+  bar.classList.add('show');
+}
+function returnSelected(){
+  for(const id of selSet){ const c=find(id); if(c) c.shown=false; }
+  save(); selMode=false; selSet.clear();
+  document.getElementById('selBar').classList.remove('show');
+  renderCustomer();
+}
 
 load(); render();
 </script>
