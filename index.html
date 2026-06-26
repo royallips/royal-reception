@@ -37,7 +37,7 @@
   .returnZone.over{background:var(--wine);border-color:var(--wine);color:#fff;transform:scale(1.05);}
 
   .grid{display:grid;gap:14px;padding:14px 18px 18px;grid-template-columns:repeat(3,1fr);}
-  .card{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#ddd;
+  .card{position:relative;aspect-ratio:595/842;border-radius:16px;overflow:hidden;background:#ddd;
     box-shadow:0 4px 14px rgba(58,15,30,.10);transition:transform .12s;border:1px solid rgba(0,0,0,.04);}
   .card:active{transform:scale(.97);}
   .card .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -48,7 +48,7 @@
   .card .name{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;
     font-size:23px;font-weight:700;letter-spacing:.03em;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 
-  .dragClone{position:fixed;width:130px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;
+  .dragClone{position:fixed;width:130px;aspect-ratio:595/842;border-radius:12px;overflow:hidden;
     transform:translate(-50%,-50%);opacity:.9;pointer-events:none;z-index:70;box-shadow:0 12px 32px rgba(0,0,0,.45);}
   .dragClone img{width:100%;height:100%;object-fit:cover;}
   .dragClone .cl-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:48px;font-weight:700;}
@@ -58,7 +58,7 @@
   /* スタッフ用：4列の選択グリッド */
   .pickWrap{padding:12px 12px 84px;}
   .pickGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .pcard{position:relative;aspect-ratio:3/4;border-radius:11px;overflow:hidden;background:#ddd;
+  .pcard{position:relative;aspect-ratio:595/842;border-radius:11px;overflow:hidden;background:#ddd;
     border:2px solid transparent;transition:transform .1s;}
   .pcard:active{transform:scale(.96);}
   .pcard .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -104,7 +104,7 @@
 
   .setGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
   .scard{cursor:pointer;}
-  .sthumb{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
+  .sthumb{position:relative;aspect-ratio:595/842;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
   .sthumb img{width:100%;height:100%;object-fit:cover;}
   .sthumb .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:700;}
   .sthumb .soldtag{position:absolute;top:5px;left:5px;background:var(--danger);color:#fff;
@@ -487,7 +487,7 @@ function renderViewerPhoto(c,idx){
   const onerr=idx===1?'onerror="switchViewerPhoto(0)"':'';
   const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
-  body.innerHTML=media+`<div class="vname">${esc(c.name)}</div>`;
+  body.innerHTML=media+(mode!=='customer'?`<div class="vname">${esc(c.name)}</div>`:'');
   sw.style.display='none'; sw.innerHTML='';
   if(!p2) return;
   const showSw=()=>{
