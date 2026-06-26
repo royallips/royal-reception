@@ -97,6 +97,10 @@
   .setHead{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
   .setHead h2{font-size:17px;color:var(--wine);margin:0;}
   .btn{background:var(--wine);color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;}
+  .btn.ghost{background:#fff;color:var(--wine);border:1px solid var(--line);}
+  .bulkArea{width:100%;height:220px;padding:12px;border:1px solid var(--line);border-radius:10px;
+    font-size:14px;font-family:inherit;line-height:1.7;resize:vertical;}
+  .bulkArea:focus{outline:none;border-color:var(--wine);}
   .setGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
   .scard{cursor:pointer;}
   .sthumb{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
@@ -184,6 +188,23 @@
   </div>
 </div>
 
+<div class="modal" id="bulkModal">
+  <div class="sheet" style="max-width:540px">
+    <h3>まとめて登録</h3>
+    <p style="margin:0 0 12px;font-size:13px;line-height:1.7;color:var(--gray);">
+      1行に1人ずつ「源氏名, girlid」の形で貼り付けてください。<br>
+      写真URLは自動で作成されます（…/img/girlid.jpg）。<br>
+      同じgirlidが既にある場合は上書き更新します。
+    </p>
+    <textarea id="bulkText" class="bulkArea" placeholder="りの, 61727974&#10;あおい, 26252454&#10;ひな, 64166799"></textarea>
+    <div id="bulkMsg" style="font-size:13px;font-weight:700;color:var(--wine);margin-top:8px;min-height:18px;"></div>
+    <div class="sheetActs">
+      <button class="cancel" onclick="closeBulk()">とじる</button>
+      <button class="save" onclick="runBulk()">取り込み</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let casts = [];          // {id,name,photo,gid,sold,shown}
 let mode = 'customer';
@@ -191,6 +212,7 @@ let editId = null;
 let draft = new Set();
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
+const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
 
 const SAMPLE = [
   ['61727974','りの'],['26252454','あおい'],['64166799','ひな'],
@@ -301,7 +323,9 @@ function addSelection(){
 function renderSettings(){
   const list=[...casts].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html='<div class="setWrap"><div class="setHead"><h2>キャスト登録</h2>'
-    +'<button class="btn" style="margin-left:auto" onclick="openAdd()">＋ キャスト追加</button></div>';
+    +'<div style="margin-left:auto;display:flex;gap:8px">'
+    +'<button class="btn ghost" onclick="openBulk()">まとめて登録</button>'
+    +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div></div>';
   if(list.length===0){
     html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
   }else{
@@ -321,6 +345,39 @@ function renderSettings(){
 }
 
 function setMode(m){ mode=m; closeViewer(); render(); }
+
+/* まとめて登録 */
+function openBulk(){
+  document.getElementById('bulkText').value='';
+  document.getElementById('bulkMsg').textContent='';
+  document.getElementById('bulkModal').classList.add('show');
+}
+function closeBulk(){ document.getElementById('bulkModal').classList.remove('show'); }
+function runBulk(){
+  const txt=document.getElementById('bulkText').value;
+  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let added=0, updated=0, skipped=0;
+  for(const line of lines){
+    const parts=line.split(/[,，\t]+/).map(s=>s.trim()).filter(s=>s!=='');
+    const name=parts[0]||'';
+    const gid=(parts[1]||'').replace(/[^0-9]/g,'');
+    if(!name){ skipped++; continue; }
+    const photo=gid?(PHOTO_BASE+gid+'.jpg'):'';
+    let ex=null;
+    if(gid) ex=casts.find(c=>c.gid===gid);
+    if(!ex) ex=casts.find(c=>c.name===name);
+    if(ex){ ex.name=name; if(gid)ex.gid=gid; if(photo)ex.photo=photo; updated++; }
+    else{
+      casts.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        name,gid,photo,sold:false,shown:false});
+      added++;
+    }
+  }
+  save();
+  document.getElementById('bulkMsg').textContent=
+    `追加 ${added}件 ／ 更新 ${updated}件`+(skipped?` ／ 読み取れず ${skipped}件`:'');
+  renderSettings();
+}
 
 /* 追加・編集 */
 function openAdd(){ editId=null;
