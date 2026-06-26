@@ -315,6 +315,7 @@ function renderCustomer(){
     .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html=`<div class="custBar">
       <button class="resetBtn" onclick="resetCustomer()">リセット</button>
+      <button class="resetBtn" onclick="openSelMode()">戻す</button>
     </div>`;
   html+='<div class="grid">';
   for(const c of list) html+=custCardHTML(c);
@@ -574,11 +575,10 @@ function switchViewerPhoto(idx){
 }
 function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
 
-/* ===== ダブルタップで選択モード ===== */
+/* ===== タップ選択モード ===== */
 let g=null;
-const MOVE_CANCEL=20, DBL_MS=300;
+const MOVE_CANCEL=20;
 let selMode=false, selSet=new Set();
-let lastTap={id:null, t:0};
 
 function attachDnd(){
   document.querySelectorAll('.card[data-id]').forEach(card=>{
@@ -590,7 +590,6 @@ function attachDnd(){
   });
 }
 function gestureStart(e, id){
-  if(g) g=null;
   g={id, x0:e.clientX, y0:e.clientY, pid:e.pointerId};
 }
 function gestureMove(e){
@@ -602,21 +601,15 @@ function gestureEnd(e){
   const moved=Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>10;
   const id=g.id; g=null;
   if(moved) return;
-  if(selMode){ custToggleSel(id); return; }
-  const now=Date.now();
-  if(lastTap.id===id && now-lastTap.t<DBL_MS){
-    lastTap={id:null,t:0};
-    if(navigator.vibrate) navigator.vibrate(18);
-    enterSelMode(id);
-  } else {
-    lastTap={id, t:now};
-    showPhoto(id);
-  }
+  if(selMode){ custToggleSel(id); } else { showPhoto(id); }
 }
 document.addEventListener('pointermove', gestureMove, {passive:false});
 document.addEventListener('pointerup', gestureEnd);
 document.addEventListener('pointercancel', e=>{ if(g && e.pointerId===g.pid) g=null; });
 
+function openSelMode(){
+  selMode=true; selSet=new Set(); updateSelUI();
+}
 function enterSelMode(id){
   selMode=true; selSet=new Set([id]); updateSelUI();
 }
