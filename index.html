@@ -180,7 +180,7 @@
   <div class="selInfo"></div>
   <div class="selActions">
     <button class="selCancel" onclick="cancelSel()">キャンセル</button>
-    <button class="selReturn" onclick="returnSelected()">↩ 戻す</button>
+    <button class="selReturn" onclick="returnSelected()">戻す</button>
   </div>
 </div>
 
@@ -574,10 +574,11 @@ function switchViewerPhoto(idx){
 }
 function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
 
-/* ===== 長押しで選択モード ===== */
+/* ===== ダブルタップで選択モード ===== */
 let g=null;
-const LP_MS=350, MOVE_CANCEL=20;
+const MOVE_CANCEL=20, DBL_MS=300;
 let selMode=false, selSet=new Set();
+let lastTap={id:null, t:0};
 
 function attachDnd(){
   document.querySelectorAll('.card[data-id]').forEach(card=>{
@@ -589,28 +590,32 @@ function attachDnd(){
   });
 }
 function gestureStart(e, id){
-  if(g) clearTimeout(g.lp);
-  const x=e.clientX, y=e.clientY;
-  g={id, x0:x, y0:y, pid:e.pointerId,
-     lp:setTimeout(()=>{ if(navigator.vibrate) navigator.vibrate(18); enterSelMode(id); g=null; }, LP_MS)};
+  if(g) g=null;
+  g={id, x0:e.clientX, y0:e.clientY, pid:e.pointerId};
 }
 function gestureMove(e){
   if(!g || e.pointerId!==g.pid) return;
-  if(Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>MOVE_CANCEL){ clearTimeout(g.lp); g=null; }
+  if(Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>MOVE_CANCEL) g=null;
 }
 function gestureEnd(e){
   if(!g || e.pointerId!==g.pid) return;
-  clearTimeout(g.lp);
   const moved=Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>10;
   const id=g.id; g=null;
-  if(!moved){ if(selMode) custToggleSel(id); else showPhoto(id); }
+  if(moved) return;
+  if(selMode){ custToggleSel(id); return; }
+  const now=Date.now();
+  if(lastTap.id===id && now-lastTap.t<DBL_MS){
+    lastTap={id:null,t:0};
+    if(navigator.vibrate) navigator.vibrate(18);
+    enterSelMode(id);
+  } else {
+    lastTap={id, t:now};
+    showPhoto(id);
+  }
 }
 document.addEventListener('pointermove', gestureMove, {passive:false});
 document.addEventListener('pointerup', gestureEnd);
-document.addEventListener('pointercancel', e=>{
-  if(!g || e.pointerId!==g.pid) return;
-  clearTimeout(g.lp); g=null;
-});
+document.addEventListener('pointercancel', e=>{ if(g && e.pointerId===g.pid) g=null; });
 
 function enterSelMode(id){
   selMode=true; selSet=new Set([id]); updateSelUI();
