@@ -178,12 +178,8 @@
     <div class="field"><label>源氏名</label>
       <input id="fName" type="text" placeholder="" autocomplete="off">
       <div id="nameErr" style="display:none;color:var(--danger);font-size:12px;margin-top:5px;">源氏名を入力してください</div></div>
-    <div class="field"><label>写真URL 1</label>
+    <div class="field"><label>写真URL</label>
       <input id="fPhoto1" type="text" placeholder="" autocomplete="off"></div>
-    <div class="field"><label>写真URL 2</label>
-      <input id="fPhoto2" type="text" placeholder="" autocomplete="off"></div>
-    <div class="field"><label>写真URL 3</label>
-      <input id="fPhoto3" type="text" placeholder="" autocomplete="off"></div>
     <div class="field"><label>girlid</label>
       <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"></div>
     <div class="sheetActs">
@@ -456,7 +452,7 @@ function runBulk(){
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
   document.getElementById('fName').value='';
-  document.getElementById('fPhoto1').value=''; document.getElementById('fPhoto2').value=''; document.getElementById('fPhoto3').value='';
+  document.getElementById('fPhoto1').value='';
   document.getElementById('fGid').value='';
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
@@ -467,8 +463,6 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('editTitle').textContent='キャストを編集';
   document.getElementById('fName').value=c.name;
   document.getElementById('fPhoto1').value=photos[0]||'';
-  document.getElementById('fPhoto2').value=photos[1]||'';
-  document.getElementById('fPhoto3').value=photos[2]||'';
   document.getElementById('fGid').value=c.gid;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
@@ -477,10 +471,8 @@ function saveCast(){
   const name=document.getElementById('fName').value.trim();
   const gid=document.getElementById('fGid').value.trim();
   const p1=document.getElementById('fPhoto1').value.trim();
-  const p2=document.getElementById('fPhoto2').value.trim();
-  const p3=document.getElementById('fPhoto3').value.trim();
   if(!name){ document.getElementById('nameErr').style.display='block'; return; }
-  const photos=[p1,p2,p3].filter(Boolean);
+  const photos=[p1].filter(Boolean);
   if(photos.length===0) photos.push('');
   if(editId){
     const c=find(editId);
