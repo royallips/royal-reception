@@ -101,6 +101,7 @@
   .bulkArea{width:100%;height:220px;padding:12px;border:1px solid var(--line);border-radius:10px;
     font-size:14px;font-family:inherit;line-height:1.7;resize:vertical;}
   .bulkArea:focus{outline:none;border-color:var(--wine);}
+
   .setGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
   .scard{cursor:pointer;}
   .sthumb{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#ddd;border:1px solid rgba(0,0,0,.04);}
@@ -110,6 +111,10 @@
     font-size:10px;font-weight:800;border-radius:6px;padding:2px 6px;}
   .sname{margin-top:6px;font-size:13px;font-weight:700;text-align:center;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .photoSwitch{display:flex;gap:3px;margin-top:4px;}
+  .photoSwitch button{flex:1;padding:3px 0;border:1px solid var(--line);border-radius:5px;
+    font-size:11px;font-weight:700;background:#fff;color:var(--gray);}
+  .photoSwitch button.active{background:var(--wine);color:#fff;border-color:var(--wine);}
   .empty{color:var(--gray);font-size:14px;padding:14px 2px;}
 
   /* 全画面ビューア */
@@ -165,8 +170,12 @@
     <div class="field"><label>源氏名</label>
       <input id="fName" type="text" placeholder="" autocomplete="off">
       <div id="nameErr" style="display:none;color:var(--danger);font-size:12px;margin-top:5px;">源氏名を入力してください</div></div>
-    <div class="field"><label>写真URL</label>
-      <input id="fPhoto" type="text" placeholder="" autocomplete="off"></div>
+    <div class="field"><label>写真URL 1</label>
+      <input id="fPhoto1" type="text" placeholder="" autocomplete="off"></div>
+    <div class="field"><label>写真URL 2</label>
+      <input id="fPhoto2" type="text" placeholder="" autocomplete="off"></div>
+    <div class="field"><label>写真URL 3</label>
+      <input id="fPhoto3" type="text" placeholder="" autocomplete="off"></div>
     <div class="field"><label>girlid</label>
       <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"></div>
     <div class="sheetActs">
@@ -219,10 +228,20 @@ const SAMPLE = [
   ['8663120','りつ'],['63465479','れな'],['37649668','あやの'],
   ['53809791','みほ'],['56767761','せいら'],['60068229','くらん'],
   ['60143549','わかな'],['44872394','りょうか'],['54563932','らら'],
-].map(([gid,name])=>({id:'c'+gid,name,photo:'',gid,sold:false,shown:false}));
+].map(([gid,name])=>({id:'c'+gid,name,photo:'',photos:[''],photoIdx:0,gid,sold:false,shown:false}));
 
 function load(){
-  try{ const v=localStorage.getItem(STORE_KEY); if(v){ casts=JSON.parse(v); return; } }catch(e){}
+  try{
+    const v=localStorage.getItem(STORE_KEY);
+    if(v){
+      casts=JSON.parse(v);
+      for(const c of casts){
+        if(!c.photos) c.photos=[c.photo||''];
+        if(c.photoIdx==null) c.photoIdx=0;
+      }
+      return;
+    }
+  }catch(e){}
   casts=SAMPLE; save();
 }
 function save(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(casts)); }catch(e){} }
@@ -334,9 +353,18 @@ function renderSettings(){
       const inner=c.photo
         ?`<img src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
         :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
+      const photos=c.photos||[c.photo||''];
+      const validCnt=photos.filter(Boolean).length;
+      let switcher='';
+      if(validCnt>1){
+        const idx=c.photoIdx||0;
+        switcher='<div class="photoSwitch" onclick="event.stopPropagation()">';
+        photos.forEach((p,i)=>{ if(p) switcher+=`<button class="${idx===i?'active':''}" onclick="switchPhoto(${JSON.stringify(c.id)},${i})">${i+1}</button>`; });
+        switcher+='</div>';
+      }
       html+=`<div class="scard" onclick='openEdit(${JSON.stringify(c.id)})'>
         <div class="sthumb">${inner}</div>
-        <div class="sname">${esc(c.name)}</div></div>`;
+        <div class="sname">${esc(c.name)}</div>${switcher}</div>`;
     }
     html+='</div>';
   }
@@ -345,6 +373,13 @@ function renderSettings(){
 }
 
 function setMode(m){ mode=m; closeViewer(); render(); }
+
+/* 写真切り替え */
+function switchPhoto(id, idx){
+  const c=find(id); if(!c)return;
+  c.photoIdx=idx; c.photo=(c.photos||[])[idx]||'';
+  save(); renderSettings();
+}
 
 /* まとめて登録 */
 function openBulk(){
@@ -363,13 +398,15 @@ function runBulk(){
     const gid=(parts[1]||'').replace(/[^0-9]/g,'');
     if(!name){ skipped++; continue; }
     const photo=gid?(PHOTO_BASE+gid+'.jpg'):'';
+    const photos=photo?[photo]:[''];
     let ex=null;
     if(gid) ex=casts.find(c=>c.gid===gid);
     if(!ex) ex=casts.find(c=>c.name===name);
-    if(ex){ ex.name=name; if(gid)ex.gid=gid; if(photo)ex.photo=photo; updated++; }
+    if(ex){ ex.name=name; if(gid)ex.gid=gid; if(photo)ex.photo=photo;
+      if(!ex.photos) ex.photos=[photo]; updated++; }
     else{
       casts.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-        name,gid,photo,sold:false,shown:false});
+        name,gid,photo,photos,photoIdx:0,sold:false,shown:false});
       added++;
     }
   }
@@ -382,22 +419,41 @@ function runBulk(){
 /* 追加・編集 */
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
-  document.getElementById('fName').value=''; document.getElementById('fPhoto').value=''; document.getElementById('fGid').value='';
+  document.getElementById('fName').value='';
+  document.getElementById('fPhoto1').value=''; document.getElementById('fPhoto2').value=''; document.getElementById('fPhoto3').value='';
+  document.getElementById('fGid').value='';
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
+  const photos=c.photos||[c.photo||''];
   document.getElementById('editTitle').textContent='キャストを編集';
-  document.getElementById('fName').value=c.name; document.getElementById('fPhoto').value=c.photo; document.getElementById('fGid').value=c.gid;
+  document.getElementById('fName').value=c.name;
+  document.getElementById('fPhoto1').value=photos[0]||'';
+  document.getElementById('fPhoto2').value=photos[1]||'';
+  document.getElementById('fPhoto3').value=photos[2]||'';
+  document.getElementById('fGid').value=c.gid;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editModal').classList.add('show'); }
-function saveCast(){ const name=document.getElementById('fName').value.trim();
-  const photo=document.getElementById('fPhoto').value.trim(); const gid=document.getElementById('fGid').value.trim();
+function saveCast(){
+  const name=document.getElementById('fName').value.trim();
+  const gid=document.getElementById('fGid').value.trim();
+  const p1=document.getElementById('fPhoto1').value.trim();
+  const p2=document.getElementById('fPhoto2').value.trim();
+  const p3=document.getElementById('fPhoto3').value.trim();
   if(!name){ document.getElementById('nameErr').style.display='block'; return; }
-  if(editId){ const c=find(editId); c.name=name; c.photo=photo; c.gid=gid; }
-  else{ casts.push({id:'c'+Date.now(),name,photo,gid,sold:false,shown:false}); }
+  const photos=[p1,p2,p3].filter(Boolean);
+  if(photos.length===0) photos.push('');
+  if(editId){
+    const c=find(editId);
+    c.name=name; c.gid=gid; c.photos=photos;
+    if(c.photoIdx>=photos.length) c.photoIdx=0;
+    c.photo=photos[c.photoIdx]||'';
+  } else{
+    casts.push({id:'c'+Date.now(),name,gid,photo:photos[0]||'',photos,photoIdx:0,sold:false,shown:false});
+  }
   closeEdit(); save(); render(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
   document.getElementById('confirmName').textContent=(c?c.name:'')+' を完全に削除します。元に戻せません。';
