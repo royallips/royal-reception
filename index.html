@@ -101,6 +101,11 @@
   .doneBar .done{background:var(--wine);color:#fff;border-radius:12px;padding:13px 30px;font-size:16px;font-weight:800;}
   .doneBar .done:disabled{background:#D9CEC8;color:#fff;}
 
+  .chBar{display:flex;justify-content:flex-end;padding:10px 14px 0;}
+  .chBar .chBtn{background:#fff;color:var(--wine);border:1.5px solid var(--wine);border-radius:10px;
+    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+  .chBar .chBtn:disabled{opacity:.5;}
+
   /* 設定：6列グリッド */
   .setWrap{padding:16px 18px 40px;}
   .setHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -245,6 +250,7 @@ let draft = new Set();
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
+const CH_ATTEND = 'https://www.cityheaven.net/fukuoka/A4001/A400102/royallips21/attend/?shopmenu=2&lo=1';
 
 const SAMPLE = [
   ['61727974','りの'],['26252454','あおい'],['64166799','ひな'],
@@ -371,7 +377,8 @@ function paintStaff(){
   const nonSold=casts.filter(c=>!c.sold);   // 最短順（登録順）
   const sold=casts.filter(c=>c.sold);        // 完売は最下部へ
   const list=[...nonSold,...sold];
-  let html='<div class="pickWrap"><div class="pickGrid">';
+  let html='<div class="chBar"><button id="chSyncBtn" class="chBtn" onclick="syncCityHeaven()">シティヘブン 出勤同期</button></div>';
+  html+='<div class="pickWrap"><div class="pickGrid">';
   for(const c of list) html+=pcardHTML(c);
   html+='</div></div>';
   const n=draft.size;
@@ -408,6 +415,37 @@ function addSelection(){
   for(const id of draft){ const c=find(id); if(c&&!c.sold) c.shown=true; }  // 既存に追加
   draft = new Set();      // 追加したら選択を戻す
   save(); setMode('customer');
+}
+
+async function syncCityHeaven(){
+  const btn=document.getElementById('chSyncBtn');
+  if(btn){btn.disabled=true;btn.textContent='取得中...';}
+  try{
+    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(CH_ATTEND);
+    const res=await fetch(proxy,{cache:'no-store'});
+    if(!res.ok) throw new Error();
+    const {contents}=await res.json();
+    if(!contents) throw new Error();
+
+    const doc=new DOMParser().parseFromString(contents,'text/html');
+    const girlidSet=new Set();
+    doc.querySelectorAll('a[href*="girlid-"]').forEach(a=>{
+      const m=(a.getAttribute('href')||'').match(/girlid-(\d+)/);
+      if(m) girlidSet.add(m[1]);
+    });
+
+    if(girlidSet.size===0){alert('出勤キャストが見つかりませんでした');return;}
+
+    draft=new Set();
+    for(const c of casts){
+      if(c.gid&&girlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
+    }
+    paintStaff();
+  }catch(e){
+    alert('シティヘブンの取得に失敗しました。\nネットワーク接続を確認してください。');
+    const b=document.getElementById('chSyncBtn');
+    if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
+  }
 }
 
 /* ===== 設定（あいうえお順・6列） ===== */
