@@ -127,10 +127,10 @@
     font-size:30px;font-weight:700;text-shadow:0 2px 10px rgba(0,0,0,.6);letter-spacing:.04em;}
   .viewer .close{position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:50%;
     background:rgba(255,255,255,.15);color:#fff;font-size:22px;}
-  .vSwitch{position:absolute;bottom:88px;left:0;right:0;display:none;justify-content:center;gap:12px;}
-  .vSwitch button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);
-    color:#fff;font-size:16px;font-weight:800;border:2px solid rgba(255,255,255,.4);}
-  .vSwitch button.active{background:rgba(255,255,255,.88);color:var(--wine);border-color:#fff;}
+  .vSwitch{position:absolute;bottom:16px;right:14px;display:none;gap:5px;}
+  .vSwitch button{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.18);
+    color:#fff;font-size:11px;font-weight:800;border:1.5px solid rgba(255,255,255,.35);}
+  .vSwitch button.active{background:rgba(255,255,255,.82);color:var(--wine);border-color:#fff;}
 
   /* モーダル */
   .modal{position:fixed;inset:0;z-index:60;background:rgba(20,8,14,.55);display:none;align-items:center;justify-content:center;padding:20px;}
@@ -283,8 +283,7 @@ function custCardHTML(c){
   const inner=c.photo
     ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  return `<div class="card" data-id="${esc(c.id)}" onclick='showPhoto(${JSON.stringify(c.id)})'>${inner}
-    <div class="scrim"></div><div class="name">${esc(c.name)}</div></div>`;
+  return `<div class="card" data-id="${esc(c.id)}" onclick='showPhoto(${JSON.stringify(c.id)})'>${inner}</div>`;
 }
 function resetCustomer(){
   for(const c of casts) c.shown=false;
@@ -471,6 +470,7 @@ function closeEdit(){ document.getElementById('editModal').classList.remove('sho
 
 /* ===== 全画面ビューア ===== */
 let viewerCastId=null;
+const photo2Cache={};
 function showPhoto(id){
   if(suppressClick){ suppressClick=false; return; }
   const c=find(id); if(!c)return;
@@ -488,13 +488,20 @@ function renderViewerPhoto(c,idx){
   const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
   body.innerHTML=media+`<div class="vname">${esc(c.name)}</div>`;
-  if(p2){
+  sw.style.display='none'; sw.innerHTML='';
+  if(!p2) return;
+  const showSw=()=>{
     sw.innerHTML=
       `<button class="${idx===0?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(0)">①</button>`+
       `<button class="${idx===1?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(1)">②</button>`;
     sw.style.display='flex';
-  } else {
-    sw.style.display='none';
+  };
+  if(photo2Cache[c.gid]===true){ showSw(); }
+  else if(photo2Cache[c.gid]!==false){
+    const probe=new Image();
+    probe.onload=()=>{ photo2Cache[c.gid]=true; showSw(); };
+    probe.onerror=()=>{ photo2Cache[c.gid]=false; };
+    probe.src=p2;
   }
 }
 function switchViewerPhoto(idx){
