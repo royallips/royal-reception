@@ -104,6 +104,7 @@
   .chBar{display:flex;justify-content:flex-end;padding:10px 14px 0;}
   .chBar .chBtn{background:#fff;color:var(--wine);border:1.5px solid var(--wine);border-radius:10px;
     padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+  .chBar .chBtn.active{background:var(--wine);color:#fff;}
   .chBar .chBtn:disabled{opacity:.5;}
 
   /* 設定：6列グリッド */
@@ -247,6 +248,7 @@ let casts = [];          // {id,name,photo,gid,sold,shown}
 let mode = 'customer';
 let editId = null;
 let draft = new Set();
+let chGirlidSet = new Set();
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
@@ -370,14 +372,19 @@ function removeFromCustomer(id){
 
 /* ===== スタッフ用 ===== */
 function renderStaff(){
-  draft = new Set();   // 毎回まっさらから選び直し
+  draft = new Set();
+  chGirlidSet = new Set();
   paintStaff();
 }
 function paintStaff(){
-  const nonSold=casts.filter(c=>!c.sold);   // 最短順（登録順）
-  const sold=casts.filter(c=>c.sold);        // 完売は最下部へ
-  const list=[...nonSold,...sold];
-  let html='<div class="chBar"><button id="chSyncBtn" class="chBtn" onclick="syncCityHeaven()">シティヘブン 出勤同期</button></div>';
+  const filtered = chGirlidSet.size > 0;
+  const base = filtered
+    ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
+    : casts;
+  const list=[...base.filter(c=>!c.sold),...base.filter(c=>c.sold)];
+  const syncLabel = filtered ? '全員表示' : 'シティヘブン 出勤同期';
+  const syncAction = filtered ? 'clearChFilter()' : 'syncCityHeaven()';
+  let html=`<div class="chBar"><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}">${syncLabel}</button></div>`;
   html+='<div class="pickWrap"><div class="pickGrid">';
   for(const c of list) html+=pcardHTML(c);
   html+='</div></div>';
@@ -385,6 +392,9 @@ function paintStaff(){
   html+=`<div class="doneBar"><span class="cnt">選択中 <b>${n}</b> 名</span>
     <button class="done" ${n===0?'disabled':''} onclick="addSelection()">追加</button></div>`;
   document.getElementById('main').innerHTML=html;
+}
+function clearChFilter(){
+  chGirlidSet=new Set(); draft=new Set(); paintStaff();
 }
 function pcardHTML(c){
   const inner=c.photo
@@ -422,27 +432,21 @@ async function syncCityHeaven(){
   if(btn){btn.disabled=true;btn.textContent='取得中...';}
   try{
     const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
-    if(!res.ok) throw new Error('not found');
+    if(!res.ok) throw new Error();
     const data=await res.json();
     const girlidList=data.girlidList||[];
     if(girlidList.length===0){
-      alert('出勤データがまだありません。\nGitHub ActionsのActions画面から「Sync City Heaven Attendance」を手動実行してください。');
+      alert('出勤データがまだありません。\nGitHubのActionsタブから「Sync City Heaven Attendance」を手動実行してください。');
       const b=document.getElementById('chSyncBtn');
       if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
       return;
     }
+    chGirlidSet=new Set(girlidList);
     draft=new Set();
     for(const c of casts){
-      if(c.gid&&girlidList.includes(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
+      if(c.gid&&chGirlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
     }
     paintStaff();
-    if(data.updated){
-      const t=new Date(data.updated);
-      const hh=String(t.getHours()).padStart(2,'0');
-      const mm=String(t.getMinutes()).padStart(2,'0');
-      const b=document.getElementById('chSyncBtn');
-      if(b){b.textContent=`同期済 ${hh}:${mm}`;b.disabled=false;}
-    }
   }catch(e){
     alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
     const b=document.getElementById('chSyncBtn');
