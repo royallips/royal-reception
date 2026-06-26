@@ -542,45 +542,45 @@ function switchViewerPhoto(idx){
 }
 function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
 
-/* ===== 長押しドラッグで「戻す」 ===== */
+/* ===== 長押しドラッグで「戻す」（Pointer Events） ===== */
 let g=null, clone=null;
-const LP_MS=350, MOVE_CANCEL=12;
-function pt(e){ const t=e.touches&&e.touches[0]?e.touches[0]:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0]:e); return {x:t.clientX,y:t.clientY}; }
+const LP_MS=350, MOVE_CANCEL=20;
 
 function attachDnd(){
   document.querySelectorAll('.card[data-id]').forEach(card=>{
     const id=card.getAttribute('data-id');
-    card.addEventListener('touchstart',e=>gestureStart(e,id),{passive:true});
-    card.addEventListener('mousedown',e=>gestureStart(e,id));
+    card.addEventListener('pointerdown', e=>{
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      gestureStart(e, id);
+    }, {passive:true});
   });
 }
-function gestureStart(e,id){
-  if(e.type==='mousedown' && e.button!==0) return;
-  const p=pt(e);
-  g={id,x0:p.x,y0:p.y,dragging:false,lp:setTimeout(()=>startDrag(p.x,p.y),LP_MS)};
+function gestureStart(e, id){
+  if(g){ clearTimeout(g.lp); if(g.dragging) endDrag(); }
+  const x=e.clientX, y=e.clientY;
+  g={id, x0:x, y0:y, pid:e.pointerId, dragging:false,
+     lp:setTimeout(()=>startDrag(x,y), LP_MS)};
 }
 function gestureMove(e){
-  if(!g) return;
-  const p=pt(e);
+  if(!g || e.pointerId!==g.pid) return;
   if(!g.dragging){
-    if(Math.hypot(p.x-g.x0,p.y-g.y0)>MOVE_CANCEL){ clearTimeout(g.lp); g=null; }
+    if(Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>MOVE_CANCEL){ clearTimeout(g.lp); g=null; }
     return;
   }
   e.preventDefault();
-  moveClone(p.x,p.y);
-  zoneCheck(p.x,p.y);
+  moveClone(e.clientX, e.clientY);
+  zoneCheck(e.clientX, e.clientY);
 }
 function gestureEnd(e){
-  if(!g) return;
+  if(!g || e.pointerId!==g.pid) return;
   clearTimeout(g.lp);
   if(g.dragging){
-    const p=pt(e);
-    const drop=zoneCheck(p.x,p.y);
+    const drop=zoneCheck(e.clientX, e.clientY);
     endDrag();
     suppressClick=true;
     const id=g.id; g=null;
     if(drop) removeFromCustomer(id);
-  }else{ g=null; }
+  } else { g=null; }
 }
 function startDrag(x,y){
   if(!g) return;
@@ -609,11 +609,12 @@ function endDrag(){
   document.body.classList.remove('dragging');
   const z=document.getElementById('returnZone'); if(z){ z.classList.remove('armed','over'); }
 }
-document.addEventListener('touchmove',gestureMove,{passive:false});
-document.addEventListener('touchend',gestureEnd);
-document.addEventListener('touchcancel',()=>{ if(g){clearTimeout(g.lp);} if(g&&g.dragging) endDrag(); g=null; });
-document.addEventListener('mousemove',gestureMove);
-document.addEventListener('mouseup',gestureEnd);
+document.addEventListener('pointermove', gestureMove, {passive:false});
+document.addEventListener('pointerup', gestureEnd);
+document.addEventListener('pointercancel', e=>{
+  if(!g || e.pointerId!==g.pid) return;
+  clearTimeout(g.lp); if(g.dragging) endDrag(); g=null;
+});
 
 load(); render();
 </script>
