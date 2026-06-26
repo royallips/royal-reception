@@ -269,11 +269,35 @@ function load(){
 }
 function save(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(casts)); }catch(e){} }
 
+async function syncFromRemote(){
+  try{
+    const res=await fetch('./casts.json',{cache:'no-store'});
+    if(!res.ok) return;
+    const remote=await res.json();
+    if(!Array.isArray(remote)||remote.length===0) return;
+    const localMap=new Map(casts.map(c=>[c.id,c]));
+    let changed=false;
+    for(const rc of remote){
+      if(!rc.photos) rc.photos=[rc.photo||''];
+      if(rc.photoIdx==null) rc.photoIdx=0;
+      const local=localMap.get(rc.id);
+      if(local){
+        const {shown,sold}=local;
+        Object.assign(local,rc,{shown,sold});
+      } else {
+        casts.push({...rc,shown:false,sold:false});
+        changed=true;
+      }
+    }
+    save(); if(changed) render();
+  }catch(e){}
+}
+
 function exportData(){
   const blob=new Blob([JSON.stringify(casts,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='royal_casts_'+new Date().toISOString().slice(0,10)+'.json';
+  a.download='casts.json';
   a.click(); URL.revokeObjectURL(a.href);
 }
 function importData(input){
@@ -638,7 +662,7 @@ function returnSelected(){
   renderCustomer();
 }
 
-load(); render();
+load(); render(); syncFromRemote();
 </script>
 </body>
 </html>
