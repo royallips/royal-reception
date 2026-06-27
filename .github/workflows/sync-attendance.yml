@@ -2,7 +2,7 @@ name: Sync City Heaven Attendance
 
 on:
   schedule:
-    - cron: '0 * * * *'   # 毎時0分（JST 9:00〜翌8:00）
+    - cron: '0 * * * *'   # 毎時0分
   workflow_dispatch:       # 手動実行も可能
 
 permissions:
@@ -14,16 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: '20'
 
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4
+      - name: Install Playwright and Chromium
+        run: |
+          npm install playwright
+          npx playwright install chromium --with-deps
 
       - name: Fetch attendance from City Heaven
-        run: python scripts/fetch_attendance.py
+        run: node scripts/fetch_attendance.js
 
       - name: Commit attend.json
         run: |
