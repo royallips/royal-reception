@@ -1,8 +1,6 @@
 name: Sync Attendance
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'  # 30分ごと
   workflow_dispatch:
 
 permissions:
