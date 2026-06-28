@@ -14,11 +14,27 @@ const URL = 'https://www.cityheaven.net/fukuoka/A4001/A400102/royallips21/attend
   console.log(`Fetching: ${URL}`);
   await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
 
+  // デバッグ用: スクリーンショットとHTML保存
+  await page.screenshot({ path: 'debug_screenshot.png', fullPage: true });
+  const pageHtml = await page.content();
+  fs.writeFileSync('debug_page.html', pageHtml);
+  console.log(`Page title: ${await page.title()}`);
+  console.log(`Page URL after load: ${page.url()}`);
+  console.log(`HTML size: ${pageHtml.length} bytes`);
+
   const result = await page.evaluate((today) => {
     const ids = new Set();
     let parsedToday = false;
 
-    for (const table of document.querySelectorAll('table')) {
+    // デバッグ: テーブル構造を出力
+    const tables = document.querySelectorAll('table');
+    const debugInfo = {
+      tableCount: tables.length,
+      allText: document.body ? document.body.innerText.slice(0, 500) : '',
+      girlidLinks: [...document.querySelectorAll('a[href*="girlid-"]')].map(a => a.href).slice(0, 10),
+    };
+
+    for (const table of tables) {
       const headerRow = table.querySelector('tr');
       if (!headerRow) continue;
       const ths = [...headerRow.querySelectorAll('th,td')];
@@ -47,8 +63,14 @@ const URL = 'https://www.cityheaven.net/fukuoka/A4001/A400102/royallips21/attend
       }
     }
 
-    return { girlidList: [...ids], parsedToday };
+    return { girlidList: [...ids], parsedToday, debugInfo };
   }, todayStr);
+
+  console.log(`Debug: tables=${result.debugInfo.tableCount}, girlidLinks=${result.debugInfo.girlidLinks.length}`);
+  console.log(`Debug allText: ${result.debugInfo.allText}`);
+  if (result.debugInfo.girlidLinks.length) {
+    console.log(`Debug girlidLinks: ${result.debugInfo.girlidLinks.join(', ')}`);
+  }
 
   await browser.close();
 

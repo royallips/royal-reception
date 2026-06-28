@@ -27,6 +27,16 @@ jobs:
       - name: Fetch attendance from City Heaven
         run: node scripts/fetch_attendance.js
 
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ github.run_id }}
+          path: |
+            debug_screenshot.png
+            debug_page.html
+          retention-days: 3
+
       - name: Commit attend.json
         run: |
           git config user.name "github-actions[bot]"
