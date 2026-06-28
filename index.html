@@ -333,6 +333,7 @@ function renderCustomer(){
   let html=`<div class="custBar">
       <button class="resetBtn" onclick="resetCustomer()">リセット</button>
       <button class="resetBtn" onclick="openSelMode()">戻す</button>
+      <button class="resetBtn" style="margin-left:auto" onclick="setMode('staff')">スタッフ用</button>
     </div>`;
   html+='<div class="grid">';
   for(const c of list) html+=custCardHTML(c);
@@ -369,7 +370,7 @@ function paintStaff(){
   const list=[...base.filter(c=>!c.sold),...base.filter(c=>c.sold)];
   const syncLabel = filtered ? '全員表示' : '出勤同期';
   const syncAction = filtered ? 'clearChFilter()' : 'syncCityHeaven()';
-  let html=`<div class="chBar"><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}">${syncLabel}</button></div>`;
+  let html=`<div class="chBar"><button class="chBtn" onclick="setMode('customer')">お客様用</button><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}" style="margin-left:8px">${syncLabel}</button></div>`;
   html+='<div class="pickWrap"><div class="pickGrid">';
   for(const c of list) html+=pcardHTML(c);
   html+='</div></div>';
