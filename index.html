@@ -202,7 +202,7 @@
     <h3 id="editTitle">キャストを追加</h3>
     <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px;">
       <div id="editPhotoWrap" style="width:90px;flex-shrink:0;aspect-ratio:595/842;border-radius:10px;overflow:hidden;background:#ddd;display:none;cursor:pointer;"
-        onclick="openPhotoViewer(document.getElementById('editPhoto').src)">
+        onclick="openPhotoViewer()">
         <img id="editPhoto" src="" alt="" style="width:100%;height:100%;object-fit:cover;"
           onerror="this.parentNode.style.display='none'">
       </div>
@@ -522,11 +522,10 @@ function runBulk(){
 }
 
 /* 追加・編集 */
-function openPhotoViewer(url){
-  const body=document.getElementById('viewerBody');
-  const sw=document.getElementById('vSwitch');
-  body.innerHTML=url?`<img src="${esc(url)}" alt="">`:``;
-  sw.style.display='none'; sw.innerHTML='';
+function openPhotoViewer(){
+  const c=find(editId); if(!c)return;
+  previewMode=true; viewerCastId=c.id; viewerList=[];
+  renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
 function updateEditPhoto(){
@@ -576,7 +575,7 @@ function closeConfirm(){ document.getElementById('confirmModal').classList.remov
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
 /* ===== 全画面ビューア ===== */
-let viewerCastId=null, viewerList=[], vs=null;
+let viewerCastId=null, viewerList=[], vs=null, previewMode=false;
 const photo2Cache={};
 function showPhoto(id){
   if(suppressClick){ suppressClick=false; return; }
@@ -615,7 +614,7 @@ function renderViewerPhoto(c,idx){
   const onerr=idx===1?'onerror="switchViewerPhoto(0)"':'';
   const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
-  body.innerHTML=media+(mode!=='customer'?`<div class="vname">${esc(c.name)}</div>`:'');
+  body.innerHTML=media+(mode!=='customer'&&!previewMode?`<div class="vname">${esc(c.name)}</div>`:'');
   sw.style.display='none'; sw.innerHTML='';
   if(!p2) return;
   const showSw=()=>{
@@ -636,7 +635,7 @@ function switchViewerPhoto(idx){
   const c=find(viewerCastId); if(!c)return;
   renderViewerPhoto(c,idx);
 }
-function closeViewer(e){ if(e)e.stopPropagation(); document.getElementById('viewer').classList.remove('show'); }
+function closeViewer(e){ if(e)e.stopPropagation(); previewMode=false; document.getElementById('viewer').classList.remove('show'); }
 
 /* ===== タップ選択モード ===== */
 let g=null;
