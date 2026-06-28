@@ -244,26 +244,6 @@
   </div>
 </div>
 
-<div class="modal" id="bkModal">
-  <div class="sheet" style="max-width:540px">
-    <h3>シティヘブン 出勤ブックマーク</h3>
-    <p style="margin:0 0 14px;font-size:13px;line-height:1.8;color:var(--gray);">
-      ① 下のコードをコピーしてください。<br>
-      ② Safariで適当なページをブックマーク保存します。<br>
-      ③ ブックマーク一覧からそのブックマークを編集し、<br>
-      　 URLを上記コードに書き換えてください。<br>
-      ④ シティヘブンの出勤ページを開いて<br>
-      　 そのブックマークをタップすると自動でアプリへ移動します。
-    </p>
-    <textarea id="bkCode" readonly style="width:100%;height:90px;font-size:11px;font-family:monospace;
-      padding:10px;border:1px solid var(--line);border-radius:10px;resize:none;
-      background:#f8f5f0;color:#333;word-break:break-all;box-sizing:border-box;"></textarea>
-    <div class="sheetActs" style="margin-top:12px;">
-      <button class="cancel" onclick="closeBkModal()">とじる</button>
-      <button class="save" onclick="copyBk()">コピーする</button>
-    </div>
-  </div>
-</div>
 
 <script>
 let casts = [];          // {id,name,photo,gid,sold,shown}
@@ -275,7 +255,6 @@ let attendInfo = {};
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
-const CH_ATTEND = 'https://www.cityheaven.net/fukuoka/A4001/A400102/royallips21/attend/?shopmenu=2&lo=1';
 
 const SAMPLE = [
   ['61727974','りの'],['26252454','あおい'],['64166799','ひな'],
@@ -488,7 +467,7 @@ function renderSettings(){
     +'<button class="btn ghost sm" onclick="exportData()">書き出し</button>'
     +'<button class="btn ghost sm" onclick="document.getElementById(\'importFile\').value=\'\';document.getElementById(\'importFile\').click()">読み込み</button>'
     +'<button class="btn ghost sm" onclick="openBulk()">まとめて登録</button>'
-    +'<button class="btn ghost sm" onclick="openBkModal()">出勤ブックマーク</button>'
+
     +'</div>';
   if(list.length===0){
     html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
@@ -731,41 +710,7 @@ function returnSelected(){
   renderCustomer();
 }
 
-const BK_CODE = `javascript:(function(){var d=new Date();var s=(d.getMonth()+1)+'/'+(d.getDate());var ids=new Set(),done=false;document.querySelectorAll('table').forEach(function(tbl){if(done)return;var h=tbl.querySelector('tr');if(!h)return;var ths=[].slice.call(h.querySelectorAll('th,td'));var col=-1;for(var i=0;i<ths.length;i++){if(ths[i].textContent.indexOf(s)>=0){col=i;break;}}if(col<0)return;[].slice.call(tbl.querySelectorAll('tr')).slice(1).forEach(function(r){var cs=[].slice.call(r.querySelectorAll('td,th'));if(cs.length<=col)return;var ct=cs[col].textContent.trim();if(!ct||ct==='-'||ct==='休')return;var a=r.querySelector('a[href*="girlid-"]');if(a){var m=a.href.match(/girlid-(\\d+)/);if(m)ids.add(m[1]);}});done=true;});if(!ids.size){document.querySelectorAll('a[href*="girlid-"]').forEach(function(a){var m=a.href.match(/girlid-(\\d+)/);if(m)ids.add(m[1]);});}if(!ids.size){alert('出勤キャストが見つかりませんでした');return;}location.href='https://royallips.github.io/royal-reception/?attend='+[].slice.call(ids).join(',');})();`;
-
-function openBkModal(){
-  document.getElementById('bkCode').value=BK_CODE;
-  document.getElementById('bkModal').classList.add('show');
-}
-function closeBkModal(){
-  document.getElementById('bkModal').classList.remove('show');
-}
-function copyBk(){
-  const ta=document.getElementById('bkCode');
-  ta.select();
-  try{
-    document.execCommand('copy');
-    const btn=document.querySelector('#bkModal .save');
-    if(btn){btn.textContent='コピーしました！';setTimeout(()=>{btn.textContent='コピーする';},2000);}
-  }catch(e){
-    navigator.clipboard&&navigator.clipboard.writeText(ta.value);
-  }
-}
-
-function checkAttendParam(){
-  const p=new URLSearchParams(location.search);
-  const attend=p.get('attend');
-  if(!attend) return;
-  history.replaceState(null,'',location.pathname);
-  chGirlidSet=new Set(attend.split(',').filter(Boolean));
-  draft=new Set();
-  for(const c of casts){
-    if(c.gid&&chGirlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
-  }
-  mode='staff';
-}
-
-load(); render(); syncFromRemote(); checkAttendParam(); if(chGirlidSet.size) paintStaff();
+load(); render(); syncFromRemote(); if(chGirlidSet.size) paintStaff();
 </script>
 </body>
 </html>
