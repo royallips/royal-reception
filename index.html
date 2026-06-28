@@ -200,11 +200,20 @@
 <div class="modal" id="editModal">
   <div class="sheet">
     <h3 id="editTitle">キャストを追加</h3>
-    <div class="field"><label>源氏名</label>
-      <input id="fName" type="text" placeholder="" autocomplete="off">
-      <div id="nameErr" style="display:none;color:var(--danger);font-size:12px;margin-top:5px;">源氏名を入力してください</div></div>
-    <div class="field"><label>girlid</label>
-      <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"></div>
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px;">
+      <div id="editPhotoWrap" style="width:90px;flex-shrink:0;aspect-ratio:595/842;border-radius:10px;overflow:hidden;background:#ddd;display:none;">
+        <img id="editPhoto" src="" alt="" style="width:100%;height:100%;object-fit:cover;"
+          onerror="this.parentNode.style.display='none'">
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="field"><label>源氏名</label>
+          <input id="fName" type="text" placeholder="" autocomplete="off">
+          <div id="nameErr" style="display:none;color:var(--danger);font-size:12px;margin-top:5px;">源氏名を入力してください</div></div>
+        <div class="field"><label>girlid</label>
+          <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"
+            oninput="updateEditPhoto()"></div>
+      </div>
+    </div>
     <div class="sheetActs">
       <button class="del" id="editDel" onclick="deleteCast()">削除</button>
       <button class="cancel" onclick="closeEdit()">やめる</button>
@@ -512,12 +521,20 @@ function runBulk(){
 }
 
 /* 追加・編集 */
+function updateEditPhoto(){
+  const gid=document.getElementById('fGid').value.trim();
+  const wrap=document.getElementById('editPhotoWrap');
+  const img=document.getElementById('editPhoto');
+  if(gid){ wrap.style.display='block'; img.src=PHOTO_BASE+gid+'.jpg'; }
+  else { wrap.style.display='none'; img.src=''; }
+}
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
   document.getElementById('fName').value='';
   document.getElementById('fGid').value='';
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
+  document.getElementById('editPhotoWrap').style.display='none';
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
@@ -526,7 +543,8 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('fGid').value=c.gid;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
-  document.getElementById('editModal').classList.add('show'); }
+  document.getElementById('editModal').classList.add('show');
+  updateEditPhoto(); }
 function saveCast(){
   const name=document.getElementById('fName').value.trim();
   const gid=document.getElementById('fGid').value.trim();
