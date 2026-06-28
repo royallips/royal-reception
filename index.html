@@ -395,7 +395,8 @@ function pcardHTML(c){
     <div class="pname">${esc(c.name)}${(()=>{const i=attendInfo[c.gid];return i?`<span class="ptime">${esc(i.shiftTime)}${i.earliest?' 最短'+esc(i.earliest):''}` +`</span>`:'';})()}</div></div>`;
 }
 function toggleSel(id){
-  const c=find(id); if(!c||c.sold||c.shown) return;   // 完売・済は選べない
+  const c=find(id); if(!c||c.sold) return;
+  if(c.shown){ c.shown=false; save(); paintStaff(); return; }  // 済を解除
   if(draft.has(id)) draft.delete(id); else draft.add(id);
   paintStaff();
 }
