@@ -75,9 +75,10 @@
     font-size:34px;font-weight:700;color:rgba(255,255,255,.92);}
   .pcard .scrim{position:absolute;left:0;right:0;bottom:0;height:46%;
     background:linear-gradient(to top,rgba(20,5,12,.8),transparent);}
-  .pcard .pname{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;color:#fff;
+  .pcard .pname{position:absolute;left:0;right:0;bottom:0;padding:4px 8px 5px;color:#fff;
     font-size:14px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pcard .ptime{display:block;font-size:10px;font-weight:600;opacity:.9;margin-top:1px;letter-spacing:.2px;}
   .pcard.selected{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,75,.5);}
   .pcard .check{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;
     background:var(--gold);color:#3A0F1E;font-size:15px;font-weight:800;display:none;
@@ -270,6 +271,7 @@ let mode = 'customer';
 let editId = null;
 let draft = new Set();
 let chGirlidSet = new Set();
+let attendInfo = {};
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
@@ -311,8 +313,8 @@ async function syncFromRemote(){
       if(rc.photoIdx==null) rc.photoIdx=0;
       const local=localMap.get(rc.id);
       if(local){
-        const {shown,sold}=local;
-        Object.assign(local,rc,{shown,sold});
+        const {shown,sold,name}=local;
+        Object.assign(local,rc,{shown,sold,name});
       } else {
         casts.push({...rc,shown:false,sold:false});
         changed=true;
@@ -403,7 +405,7 @@ function paintStaff(){
     ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
     : casts;
   const list=[...base.filter(c=>!c.sold),...base.filter(c=>c.sold)];
-  const syncLabel = filtered ? '全員表示' : 'シティヘブン 出勤同期';
+  const syncLabel = filtered ? '全員表示' : '出勤同期';
   const syncAction = filtered ? 'clearChFilter()' : 'syncCityHeaven()';
   let html=`<div class="chBar"><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}">${syncLabel}</button></div>`;
   html+='<div class="pickWrap"><div class="pickGrid">';
@@ -428,7 +430,7 @@ function pcardHTML(c){
   return `<div class="pcard ${sel?'selected':''} ${added?'added':''} ${c.sold?'sold':''}" onclick='toggleSel(${id})'>
     ${inner}<div class="scrim"></div>${tag}
     <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>完売</button>
-    <div class="pname">${esc(c.name)}</div></div>`;
+    <div class="pname">${esc(c.name)}${(()=>{const i=attendInfo[c.gid];return i?`<span class="ptime">${esc(i.shiftTime)}${i.earliest?' 最短'+esc(i.earliest):''}` +`</span>`:'';})()}</div></div>`;
 }
 function toggleSel(id){
   const c=find(id); if(!c||c.sold||c.shown) return;   // 完売・済は選べない
@@ -457,11 +459,12 @@ async function syncCityHeaven(){
     const data=await res.json();
     const girlidList=data.girlidList||[];
     if(girlidList.length===0){
-      alert('出勤データがまだありません。\nGitHubのActionsタブから「Sync City Heaven Attendance」を手動実行してください。');
+      alert('現在出勤中のキャストはいません。');
       const b=document.getElementById('chSyncBtn');
-      if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
+      if(b){b.disabled=false;b.textContent='出勤同期';}
       return;
     }
+    attendInfo=data.attendInfo||{};
     chGirlidSet=new Set(girlidList);
     draft=new Set();
     for(const c of casts){
@@ -471,7 +474,7 @@ async function syncCityHeaven(){
   }catch(e){
     alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
     const b=document.getElementById('chSyncBtn');
-    if(b){b.disabled=false;b.textContent='シティヘブン 出勤同期';}
+    if(b){b.disabled=false;b.textContent='出勤同期';}
   }
 }
 

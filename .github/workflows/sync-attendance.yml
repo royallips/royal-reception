@@ -1,9 +1,9 @@
-name: Sync City Heaven Attendance
+name: Sync Attendance
 
 on:
   schedule:
-    - cron: '0 * * * *'   # 毎時0分
-  workflow_dispatch:       # 手動実行も可能
+    - cron: '*/30 * * * *'  # 30分ごと
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,23 +19,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install Playwright and Chromium
-        run: |
-          npm install playwright
-          npx playwright install chromium --with-deps
-
       - name: Fetch attendance from City Heaven
         run: node scripts/fetch_attendance.js
-
-      - name: Upload debug artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-${{ github.run_id }}
-          path: |
-            debug_screenshot.png
-            debug_page.html
-          retention-days: 3
 
       - name: Commit attend.json
         run: |
