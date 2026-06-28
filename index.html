@@ -203,8 +203,6 @@
     <div class="field"><label>源氏名</label>
       <input id="fName" type="text" placeholder="" autocomplete="off">
       <div id="nameErr" style="display:none;color:var(--danger);font-size:12px;margin-top:5px;">源氏名を入力してください</div></div>
-    <div class="field"><label>写真URL</label>
-      <input id="fPhoto1" type="text" placeholder="" autocomplete="off"></div>
     <div class="field"><label>girlid</label>
       <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"></div>
     <div class="sheetActs">
@@ -517,17 +515,14 @@ function runBulk(){
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
   document.getElementById('fName').value='';
-  document.getElementById('fPhoto1').value='';
   document.getElementById('fGid').value='';
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
-  const photos=c.photos||[c.photo||''];
   document.getElementById('editTitle').textContent='キャストを編集';
   document.getElementById('fName').value=c.name;
-  document.getElementById('fPhoto1').value=photos[0]||'';
   document.getElementById('fGid').value=c.gid;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
@@ -535,17 +530,14 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
 function saveCast(){
   const name=document.getElementById('fName').value.trim();
   const gid=document.getElementById('fGid').value.trim();
-  const p1=document.getElementById('fPhoto1').value.trim();
   if(!name){ document.getElementById('nameErr').style.display='block'; return; }
-  const photos=[p1].filter(Boolean);
-  if(photos.length===0) photos.push('');
+  const photo=gid?(PHOTO_BASE+gid+'.jpg'):'';
+  const photos=photo?[photo]:[''];
   if(editId){
     const c=find(editId);
-    c.name=name; c.gid=gid; c.photos=photos;
-    if(c.photoIdx>=photos.length) c.photoIdx=0;
-    c.photo=photos[c.photoIdx]||'';
+    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0;
   } else{
-    casts.push({id:'c'+Date.now(),name,gid,photo:photos[0]||'',photos,photoIdx:0,sold:false,shown:false});
+    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false});
   }
   closeEdit(); save(); render(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
