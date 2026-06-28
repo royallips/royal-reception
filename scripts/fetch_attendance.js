@@ -37,7 +37,7 @@ async function fetchCastInfo(gid) {
     if (!scheduleMatch) return null;
 
     // 最短案内時刻: "最短XX:XX" のような形式（出勤中のみ表示）
-    const earliestMatch = text.match(/最短[^\\d]{0,6}([\\d]{1,2}:[\\d]{2})/);
+    const earliestMatch = text.match(/最短[^\d]{0,6}(\d{1,2}:\d{2})/);
 
     return {
       shiftStart: scheduleMatch[1],
