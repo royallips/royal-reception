@@ -442,7 +442,6 @@ async function syncCityHeaven(){
         const[h,m]=info.shiftEnd.split(':').map(Number);
         if(nowMin>h*60+m){ c.sold=true; chGirlidSet.delete(c.gid); continue; }
       }
-      if(chGirlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
     }
     save(); paintStaff();
   }catch(e){
