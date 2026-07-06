@@ -366,7 +366,9 @@ function paintStaff(){
   const base = filtered
     ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
     : casts;
-  const list=[...base.filter(c=>!c.sold),...base.filter(c=>c.sold)];
+  const toMin=t=>{ if(!t)return 9999; const[h,m]=t.split(':').map(Number); return h*60+m; };
+  const sortFn=filtered?(a,b)=>toMin(attendInfo[a.gid]?.shiftStart)-toMin(attendInfo[b.gid]?.shiftStart):()=>0;
+  const list=[...base.filter(c=>!c.sold).sort(sortFn),...base.filter(c=>c.sold)];
   const syncLabel = filtered ? '全員表示' : '出勤同期';
   const syncAction = filtered ? 'clearChFilter()' : 'syncCityHeaven()';
   let html=`<div class="chBar"><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}">${syncLabel}</button></div>`;
