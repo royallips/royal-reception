@@ -107,6 +107,13 @@
     padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;}
   .chBar .chBtn.active{background:var(--wine);color:#fff;}
   .chBar .chBtn:disabled{opacity:.5;}
+  .inbBadge{position:absolute;top:5px;right:5px;background:var(--gold);color:#fff;
+    font-size:9px;font-weight:800;border-radius:5px;padding:2px 5px;line-height:1.2;}
+  .inbToggle{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .inbToggle label{font-size:13px;color:var(--gray);font-weight:600;}
+  .inbToggle button{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;
+    border:1.5px solid var(--wine);background:#fff;color:var(--wine);}
+  .inbToggle button.on{background:var(--wine);color:#fff;}
 
   /* 設定：6列グリッド */
   .setWrap{padding:16px 18px 40px;}
@@ -176,6 +183,7 @@
   </div>
   <div class="modeToggle">
     <button id="mCustomer" class="active" onclick="setMode('customer')">お客様用</button>
+    <button id="mInbound" onclick="setMode('inbound')">インバウンド</button>
     <button id="mStaff" onclick="setMode('staff')">スタッフ用</button>
     <button id="mSettings" onclick="setMode('settings')">設定</button>
   </div>
@@ -214,6 +222,10 @@
           <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"
             oninput="updateEditPhoto()"></div>
       </div>
+    </div>
+    <div class="inbToggle">
+      <label>インバウンド対応</label>
+      <button id="fInbound" class="" onclick="toggleFInbound()">対応しない</button>
     </div>
     <div class="sheetActs">
       <button class="del" id="editDel" onclick="deleteCast()">削除</button>
@@ -318,9 +330,11 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;'
 
 function render(){
   document.getElementById('mCustomer').classList.toggle('active',mode==='customer');
+  document.getElementById('mInbound').classList.toggle('active',mode==='inbound');
   document.getElementById('mStaff').classList.toggle('active',mode==='staff');
   document.getElementById('mSettings').classList.toggle('active',mode==='settings');
   if(mode==='customer') renderCustomer();
+  else if(mode==='inbound') renderInbound();
   else if(mode==='staff') renderStaff();
   else renderSettings();
 }
@@ -347,6 +361,43 @@ function custCardHTML(c){
   const soldOverlay=c.sold?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:18px;font-weight:900;letter-spacing:2px;">完売</span></div>`:'';
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
+/* ===== インバウンド用 ===== */
+function renderInbound(){
+  const list=casts.filter(c=>c.inbound&&!c.sold)
+    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  let html='<div class="grid">';
+  for(const c of list) html+=inbCardHTML(c);
+  html+='</div>';
+  document.getElementById('main').innerHTML=html;
+}
+function inbCardHTML(c){
+  const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
+  const fallback=esc(c.photo||'');
+  const inner=inbSrc
+    ?`<img class="photo" src="${esc(inbSrc)}" alt="" onerror="this.src='${fallback}'">`
+    :(c.photo?`<img class="photo" src="${esc(c.photo)}" alt="">`
+      :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`);
+  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}</div>`;
+}
+function showInbPhoto(id){
+  const c=find(id); if(!c) return;
+  const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
+  const fallback=c.photo||'';
+  const body=document.getElementById('viewerBody');
+  const sw=document.getElementById('vSwitch');
+  previewMode=true;
+  if(inbSrc){
+    const img=new Image();
+    img.onload=()=>{ body.innerHTML=`<img src="${esc(inbSrc)}" alt="">`; sw.style.display='none'; };
+    img.onerror=()=>{ body.innerHTML=fallback?`<img src="${esc(fallback)}" alt="">`:''; sw.style.display='none'; };
+    img.src=inbSrc;
+  } else {
+    body.innerHTML=fallback?`<img src="${esc(fallback)}" alt="">`:'';
+    sw.style.display='none';
+  }
+  document.getElementById('viewer').classList.add('show');
+}
+
 function resetCustomer(){
   for(const c of casts) c.shown=false;
   save(); renderCustomer();
@@ -392,8 +443,9 @@ function pcardHTML(c){
   const sel=draft.has(c.id)&&!c.sold&&!added;   // 今回新たに選択中
   const id=JSON.stringify(c.id);
   const tag = added ? '<div class="doneTag">済</div>' : '<div class="check">✓</div>';
+  const inbBadge = c.inbound ? '<div class="inbBadge">INB</div>' : '';
   return `<div class="pcard ${sel?'selected':''} ${added?'added':''} ${c.sold?'sold':''}" onclick='toggleSel(${id})'>
-    ${inner}<div class="scrim"></div>${tag}
+    ${inner}<div class="scrim"></div>${tag}${inbBadge}
     <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>完売</button>
     <div class="pname">${esc(c.name)}${(()=>{const i=attendInfo[c.gid];return i?`<span class="ptime">${esc(i.shiftTime)}${i.earliest?' 最短'+esc(i.earliest):''}` +`</span>`:'';})()}</div></div>`;
 }
@@ -548,6 +600,15 @@ function updateEditPhoto(){
   if(gid){ wrap.style.display='block'; img.src=PHOTO_BASE+gid+'.jpg'; }
   else { wrap.style.display='none'; img.src=''; }
 }
+function setFInbound(val){
+  const btn=document.getElementById('fInbound');
+  btn.dataset.val=val?'1':'0';
+  btn.textContent=val?'対応する':'対応しない';
+  btn.className=val?'on':'';
+}
+function toggleFInbound(){
+  setFInbound(document.getElementById('fInbound').dataset.val!=='1');
+}
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
   document.getElementById('fName').value='';
@@ -555,6 +616,7 @@ function openAdd(){ editId=null;
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editPhotoWrap').style.display='none';
+  setFInbound(false);
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
@@ -563,6 +625,7 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('fGid').value=c.gid;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
+  setFInbound(!!c.inbound);
   document.getElementById('editModal').classList.add('show');
   updateEditPhoto(); }
 function saveCast(){
@@ -571,11 +634,12 @@ function saveCast(){
   if(!name){ document.getElementById('nameErr').style.display='block'; return; }
   const photo=gid?(PHOTO_BASE+gid+'.jpg'):'';
   const photos=photo?[photo]:[''];
+  const inbound=document.getElementById('fInbound').dataset.val==='1';
   if(editId){
     const c=find(editId);
-    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0;
+    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound;
   } else{
-    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false});
+    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound});
   }
   closeEdit(); save(); render(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
