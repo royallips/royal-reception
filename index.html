@@ -328,7 +328,7 @@ function render(){
 /* ===== お客様用（横3列・フリーなし） ===== */
 function renderCustomer(){
   cancelSel();
-  const list=casts.filter(c=>c.shown&&!c.sold)
+  const list=casts.filter(c=>c.shown)
     .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html=`<div class="custBar">
       <button class="resetBtn" onclick="resetCustomer()">リセット</button>
@@ -344,7 +344,8 @@ function custCardHTML(c){
   const inner=c.photo
     ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  return `<div class="card" data-id="${esc(c.id)}">${inner}<div class="selCheck">✓</div></div>`;
+  const soldOverlay=c.sold?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:18px;font-weight:900;letter-spacing:2px;">完売</span></div>`:'';
+  return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
 function resetCustomer(){
   for(const c of casts) c.shown=false;
