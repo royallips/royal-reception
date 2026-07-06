@@ -183,8 +183,8 @@
   </div>
   <div class="modeToggle">
     <button id="mCustomer" class="active" onclick="setMode('customer')">お客様用</button>
-    <button id="mInbound" onclick="setMode('inbound')">インバウンド</button>
     <button id="mStaff" onclick="setMode('staff')">スタッフ用</button>
+    <button id="mInbound" onclick="setMode('inbound')">インバウンド</button>
     <button id="mSettings" onclick="setMode('settings')">設定</button>
   </div>
 </header>
@@ -381,20 +381,9 @@ function inbCardHTML(c){
 }
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
-  const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
-  const fallback=c.photo||'';
-  const body=document.getElementById('viewerBody');
-  const sw=document.getElementById('vSwitch');
-  previewMode=true;
-  if(inbSrc){
-    const img=new Image();
-    img.onload=()=>{ body.innerHTML=`<img src="${esc(inbSrc)}" alt="">`; sw.style.display='none'; };
-    img.onerror=()=>{ body.innerHTML=fallback?`<img src="${esc(fallback)}" alt="">`:''; sw.style.display='none'; };
-    img.src=inbSrc;
-  } else {
-    body.innerHTML=fallback?`<img src="${esc(fallback)}" alt="">`:'';
-    sw.style.display='none';
-  }
+  viewerInbound=true; viewerCastId=id;
+  viewerList=casts.filter(c=>c.inbound&&!c.sold).sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
 
@@ -652,7 +641,7 @@ function closeConfirm(){ document.getElementById('confirmModal').classList.remov
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
 /* ===== 全画面ビューア ===== */
-let viewerCastId=null, viewerList=[], vs=null, previewMode=false;
+let viewerCastId=null, viewerList=[], vs=null, previewMode=false, viewerInbound=false;
 const photo2Cache={};
 function showPhoto(id){
   if(suppressClick){ suppressClick=false; return; }
@@ -685,13 +674,17 @@ function viewerPU(e){
 function renderViewerPhoto(c,idx){
   const body=document.getElementById('viewerBody');
   const sw=document.getElementById('vSwitch');
-  const p1=c.photo||'';
-  const p2=c.gid?(PHOTO_BASE+c.gid+'_2.jpg'):'';
+  const p1=viewerInbound
+    ?(c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):(c.photo||''))
+    :(c.photo||'');
+  const fallback=viewerInbound?(esc(c.photo||'')):'';
+  const p2=(!viewerInbound&&c.gid)?(PHOTO_BASE+c.gid+'_2.jpg'):'';
   const url=idx===1?p2:p1;
-  const onerr=idx===1?'onerror="switchViewerPhoto(0)"':'';
+  const onerr=viewerInbound?`onerror="this.src='${fallback}'"` :(idx===1?'onerror="switchViewerPhoto(0)"':'');
   const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
-  body.innerHTML=media+(mode!=='customer'&&!previewMode?`<div class="vname">${esc(c.name)}</div>`:'');
+  const showName=mode!=='customer'&&mode!=='inbound'&&!previewMode;
+  body.innerHTML=media+(showName?`<div class="vname">${esc(c.name)}</div>`:'');
   sw.style.display='none'; sw.innerHTML='';
   if(!p2) return;
   const showSw=()=>{
@@ -712,7 +705,7 @@ function switchViewerPhoto(idx){
   const c=find(viewerCastId); if(!c)return;
   renderViewerPhoto(c,idx);
 }
-function closeViewer(e){ if(e)e.stopPropagation(); previewMode=false; document.getElementById('viewer').classList.remove('show'); }
+function closeViewer(e){ if(e)e.stopPropagation(); previewMode=false; viewerInbound=false; document.getElementById('viewer').classList.remove('show'); }
 
 /* ===== タップ選択モード ===== */
 let g=null;
