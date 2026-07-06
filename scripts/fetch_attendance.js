@@ -38,7 +38,7 @@ async function fetchCastInfo(gid) {
 
     const text = extractText(await res.text());
 
-    const dateRe = new RegExp(`0?${month}/0?${day}[^\\d〜～]{0,10}([\\d]{1,2}:[\\d]{2})[〜～～~]([\\d]{1,2}:[\\d]{2})`);
+    const dateRe = new RegExp(`0?${month}/0?${day}[^\\d〜～]{0,10}([\\d]{1,2}:[\\d]{2})[-〜～～~\\s]+([\\d]{1,2}:[\\d]{2})`);
     const scheduleMatch = text.match(dateRe);
     if (!scheduleMatch) return null;
 
