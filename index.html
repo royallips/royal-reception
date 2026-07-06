@@ -362,14 +362,22 @@ function custCardHTML(c){
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
 /* ===== インバウンド用 ===== */
+let inbFiltered=false;
 function renderInbound(){
-  const list=casts.filter(c=>c.inbound&&!c.sold)
-    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
-  let html='<div class="grid">';
+  const base=inbFiltered
+    ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
+    : casts.filter(c=>c.inbound&&!c.sold);
+  const list=base.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  let html=`<div class="chBar">
+    <button class="chBtn ${inbFiltered?'active':''}" onclick="setInbFilter(true)">本日出勤</button>
+    <button class="chBtn ${!inbFiltered?'active':''}" onclick="setInbFilter(false)" style="margin-left:8px">全員表示</button>
+  </div>`;
+  html+='<div class="grid">';
   for(const c of list) html+=inbCardHTML(c);
   html+='</div>';
   document.getElementById('main').innerHTML=html;
 }
+function setInbFilter(val){ inbFiltered=val; renderInbound(); }
 function inbCardHTML(c){
   const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
   const fallback=esc(c.photo||'');
@@ -377,12 +385,16 @@ function inbCardHTML(c){
     ?`<img class="photo" src="${esc(inbSrc)}" alt="" onerror="this.src='${fallback}'">`
     :(c.photo?`<img class="photo" src="${esc(c.photo)}" alt="">`
       :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`);
-  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}</div>`;
+  const soldOverlay=c.sold?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:18px;font-weight:900;letter-spacing:2px;">完売</span></div>`:'';
+  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}${soldOverlay}</div>`;
 }
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
   viewerInbound=true; viewerCastId=id;
-  viewerList=casts.filter(c=>c.inbound&&!c.sold).sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  const base=inbFiltered
+    ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
+    : casts.filter(c=>c.inbound&&!c.sold);
+  viewerList=base.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
