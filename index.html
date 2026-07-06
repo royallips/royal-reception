@@ -431,10 +431,18 @@ async function syncCityHeaven(){
     attendInfo=data.attendInfo||{};
     chGirlidSet=new Set(girlidList);
     draft=new Set();
+    const nowJST=new Date(Date.now()+9*3600000);
+    const nowMin=nowJST.getUTCHours()*60+nowJST.getUTCMinutes();
     for(const c of casts){
-      if(c.gid&&chGirlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
+      if(!c.gid) continue;
+      const info=attendInfo[c.gid];
+      if(info?.shiftEnd){
+        const[h,m]=info.shiftEnd.split(':').map(Number);
+        if(nowMin>h*60+m){ c.sold=true; chGirlidSet.delete(c.gid); continue; }
+      }
+      if(chGirlidSet.has(c.gid)&&!c.sold&&!c.shown) draft.add(c.id);
     }
-    paintStaff();
+    save(); paintStaff();
   }catch(e){
     alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
     const b=document.getElementById('chSyncBtn');
