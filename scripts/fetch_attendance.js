@@ -43,12 +43,14 @@ async function fetchCastInfo(gid) {
     if (!scheduleMatch) return null;
 
     const earliestMatch = text.match(/最短[^\d]{0,6}(\d{1,2}:\d{2})/);
+    const soldOut = text.includes('受付終了');
 
     return {
       shiftStart: scheduleMatch[1],
       shiftEnd: scheduleMatch[2],
       shiftTime: `${scheduleMatch[1]}〜${scheduleMatch[2]}`,
       earliest: earliestMatch ? earliestMatch[1] : null,
+      soldOut,
     };
   } catch (e) {
     console.error(`${gid}: ${e.message}`);

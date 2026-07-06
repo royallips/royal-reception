@@ -436,6 +436,7 @@ async function syncCityHeaven(){
     for(const c of casts){
       if(!c.gid) continue;
       const info=attendInfo[c.gid];
+      if(info?.soldOut){ c.sold=true; chGirlidSet.delete(c.gid); continue; }
       if(info?.shiftEnd){
         const[h,m]=info.shiftEnd.split(':').map(Number);
         if(nowMin>h*60+m){ c.sold=true; chGirlidSet.delete(c.gid); continue; }
