@@ -368,9 +368,10 @@ function paintStaff(){
   const toMin=t=>{ if(!t)return 9999; const[h,m]=t.split(':').map(Number); return h*60+m; };
   const sortFn=filtered?(a,b)=>toMin(attendInfo[a.gid]?.shiftStart)-toMin(attendInfo[b.gid]?.shiftStart):()=>0;
   const list=[...base.filter(c=>!c.sold).sort(sortFn),...base.filter(c=>c.sold)];
-  const syncLabel = filtered ? '全員表示' : '出勤同期';
-  const syncAction = filtered ? 'clearChFilter()' : 'syncCityHeaven()';
-  let html=`<div class="chBar"><button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="${syncAction}">${syncLabel}</button></div>`;
+  let html=`<div class="chBar">
+    <button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
+    <button class="chBtn ${!filtered?'active':''}" onclick="clearChFilter()" style="margin-left:8px">全員表示</button>
+  </div>`;
   html+='<div class="pickWrap"><div class="pickGrid">';
   for(const c of list) html+=pcardHTML(c);
   html+='</div></div>';
