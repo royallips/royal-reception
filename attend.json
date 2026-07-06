@@ -1,7 +1,128 @@
 {
-  "girlidList": [],
-  "attendInfo": {},
-  "updated": "2026-07-06T18:46:59.034Z",
+  "girlidList": [
+    "61223265",
+    "9104523",
+    "55171961",
+    "37649668",
+    "63753374",
+    "61310198",
+    "60068229",
+    "35634888",
+    "52596406",
+    "17474020",
+    "42094905",
+    "48711178",
+    "64571430",
+    "62004148",
+    "64979657",
+    "34561712",
+    "60090263"
+  ],
+  "attendInfo": {
+    "9104523": {
+      "shiftStart": "12:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "12:00〜16:00",
+      "earliest": null
+    },
+    "17474020": {
+      "shiftStart": "8:00",
+      "shiftEnd": "13:00",
+      "shiftTime": "8:00〜13:00",
+      "earliest": null
+    },
+    "34561712": {
+      "shiftStart": "10:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "10:00〜16:00",
+      "earliest": null
+    },
+    "35634888": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null
+    },
+    "37649668": {
+      "shiftStart": "9:00",
+      "shiftEnd": "22:00",
+      "shiftTime": "9:00〜22:00",
+      "earliest": null
+    },
+    "42094905": {
+      "shiftStart": "22:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "22:00〜23:59",
+      "earliest": null
+    },
+    "48711178": {
+      "shiftStart": "16:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "16:00〜23:59",
+      "earliest": null
+    },
+    "52596406": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null
+    },
+    "55171961": {
+      "shiftStart": "17:30",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:30〜23:59",
+      "earliest": null
+    },
+    "60068229": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null
+    },
+    "60090263": {
+      "shiftStart": "18:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "18:00〜23:59",
+      "earliest": null
+    },
+    "61223265": {
+      "shiftStart": "11:30",
+      "shiftEnd": "17:00",
+      "shiftTime": "11:30〜17:00",
+      "earliest": null
+    },
+    "61310198": {
+      "shiftStart": "19:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "19:00〜23:59",
+      "earliest": null
+    },
+    "62004148": {
+      "shiftStart": "20:00",
+      "shiftEnd": "23:00",
+      "shiftTime": "20:00〜23:00",
+      "earliest": null
+    },
+    "63753374": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null
+    },
+    "64571430": {
+      "shiftStart": "10:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "10:00〜15:00",
+      "earliest": null
+    },
+    "64979657": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null
+    }
+  },
+  "updated": "2026-07-06T19:14:57.433Z",
   "date": "7/6",
-  "count": 0
+  "count": 17
 }
