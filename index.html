@@ -874,7 +874,10 @@ function renderViewerPhoto(c,idx){
   if(viewerInbound){
     const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):(c.photo||'');
     const inbSrc2=c.gid?(PHOTO_BASE+c.gid+'_inb_2.jpg'):'';
+    const fallback=esc(c.photo||'');
     url=idx===1?inbSrc2:inbSrc;
+    onerr=idx===0&&c.gid?`onerror="this.src='${fallback}';this.onerror=null"`
+         :idx===1?'onerror="switchViewerPhoto(0)"':'';
     if(inbSrc2){
       const cacheKey=c.gid+'_inb2';
       const showSw=()=>{
