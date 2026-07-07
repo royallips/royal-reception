@@ -252,6 +252,10 @@
       <label>インバウンド対応</label>
       <button id="fInbound" class="" onclick="toggleFInbound()">対応しない</button>
     </div>
+    <div class="field" id="inbMemoWrap" style="display:none">
+      <label>対応条件メモ（例：日本語OK・英語OK・韓国語対応）</label>
+      <input type="text" id="fInbMemo" placeholder="条件を入力（任意）" maxlength="30">
+    </div>
     <div class="sheetActs">
       <button class="del" id="editDel" onclick="deleteCast()">削除</button>
       <button class="cancel" onclick="closeEdit()">やめる</button>
@@ -392,7 +396,7 @@ function custCardHTML(c){
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
 /* ===== インバウンド用 ===== */
-let inbFiltered=false;
+let inbFiltered=false, inbShowMemo=false;
 function renderInbound(){
   const base=inbFiltered
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
@@ -401,6 +405,7 @@ function renderInbound(){
   let html=`<div class="chBar">
     <button class="chBtn ${inbFiltered?'active':''}" onclick="setInbFilter(true)">本日出勤</button>
     <button class="chBtn ${!inbFiltered?'active':''}" onclick="setInbFilter(false)" style="margin-left:8px">全員表示</button>
+    <button class="chBtn ${inbShowMemo?'active':''}" onclick="toggleInbMemo()" style="margin-left:8px">条件</button>
   </div>`;
   html+='<div class="grid">';
   for(const c of list) html+=inbCardHTML(c);
@@ -408,6 +413,7 @@ function renderInbound(){
   document.getElementById('main').innerHTML=html;
 }
 function setInbFilter(val){ inbFiltered=val; renderInbound(); }
+function toggleInbMemo(){ inbShowMemo=!inbShowMemo; renderInbound(); }
 function inbCardHTML(c){
   const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
   const fallback=esc(c.photo||'');
@@ -415,7 +421,10 @@ function inbCardHTML(c){
     ?`<img class="photo" src="${esc(inbSrc)}" alt="" onerror="this.src='${fallback}'">`
     :(c.photo?`<img class="photo" src="${esc(c.photo)}" alt="">`
       :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`);
-  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}</div>`;
+  const memo=inbShowMemo&&c.inbMemo
+    ?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:5px 6px;text-align:center;line-height:1.3;">${esc(c.inbMemo)}</div>`
+    :'';
+  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}${memo}</div>`;
 }
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
@@ -639,6 +648,8 @@ function setFInbound(val){
   btn.dataset.val=val?'1':'0';
   btn.textContent=val?'対応する':'対応しない';
   btn.className=val?'on':'';
+  document.getElementById('inbMemoWrap').style.display=val?'block':'none';
+  if(!val) document.getElementById('fInbMemo').value='';
 }
 function toggleFInbound(){
   setFInbound(document.getElementById('fInbound').dataset.val!=='1');
@@ -651,6 +662,7 @@ function openAdd(){ editId=null;
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editPhotoWrap').style.display='none';
   setFInbound(false);
+  document.getElementById('fInbMemo').value='';
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
@@ -660,6 +672,7 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
   setFInbound(!!c.inbound);
+  document.getElementById('fInbMemo').value=c.inbMemo||'';
   document.getElementById('editModal').classList.add('show');
   updateEditPhoto(); }
 function saveCast(){
@@ -669,11 +682,12 @@ function saveCast(){
   const photo=gid?(PHOTO_BASE+gid+'.jpg'):'';
   const photos=photo?[photo]:[''];
   const inbound=document.getElementById('fInbound').dataset.val==='1';
+  const inbMemo=inbound?document.getElementById('fInbMemo').value.trim():'';
   if(editId){
     const c=find(editId);
-    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound;
+    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound; c.inbMemo=inbMemo;
   } else{
-    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound});
+    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo});
   }
   closeEdit(); save(); render(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
@@ -716,8 +730,8 @@ async function pushCastsToGitHub(){
     if(!meta.ok) throw new Error('トークンまたはリポジトリのエラー: '+meta.status);
     const {sha}=await meta.json();
     // 保存するデータ（name/inbound含む全フィールド、sold/shownは除外）
-    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound})=>
-      ({id,gid,name,photo,photos,photoIdx,inbound}));
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
       method:'PUT',
