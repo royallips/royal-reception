@@ -491,6 +491,8 @@ async function syncCityHeaven(){
       if(!c.gid) continue;
       const info=attendInfo[c.gid];
       if(!info) continue;
+      // 出勤データがある場合はまずリセットして、条件に合う場合のみ完売にする
+      c.sold=false;
       if(info.soldOut){ c.sold=true; continue; }
       if(info.shiftEnd){
         const[h,m]=info.shiftEnd.split(':').map(Number);
