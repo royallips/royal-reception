@@ -303,6 +303,9 @@ let attendInfo = {};
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
 const SOLD_DATE_KEY = 'royal_reception_sold_date';
+const DELETED_KEY = 'royal_reception_deleted';
+function getDeletedIds(){ try{ return new Set(JSON.parse(localStorage.getItem(DELETED_KEY)||'[]')); }catch(e){ return new Set(); } }
+function addDeletedId(id){ const s=getDeletedIds(); s.add(id); localStorage.setItem(DELETED_KEY,JSON.stringify([...s])); }
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
 
 const SAMPLE = [
@@ -339,8 +342,10 @@ async function syncFromRemote(){
     const remote=await res.json();
     if(!Array.isArray(remote)||remote.length===0) return;
     const localMap=new Map(casts.map(c=>[c.id,c]));
+    const deletedIds=getDeletedIds();
     let changed=false;
     for(const rc of remote){
+      if(deletedIds.has(rc.id)) continue;
       if(!rc.photos) rc.photos=[rc.photo||''];
       if(rc.photoIdx==null) rc.photoIdx=0;
       const local=localMap.get(rc.id);
@@ -694,6 +699,7 @@ function deleteCast(){ if(!editId)return; const c=find(editId);
   document.getElementById('confirmName').textContent=(c?c.name:'')+' を完全に削除します。元に戻せません。';
   document.getElementById('confirmModal').classList.add('show'); }
 function reallyDelete(){ if(!editId){ closeConfirm(); return; }
+  addDeletedId(editId);
   casts=casts.filter(c=>c.id!==editId);
   closeConfirm(); closeEdit(); save(); render(); }
 function closeConfirm(){ document.getElementById('confirmModal').classList.remove('show'); }
