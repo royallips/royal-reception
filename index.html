@@ -253,7 +253,7 @@
       <button id="fInbound" class="" onclick="toggleFInbound()">対応しない</button>
     </div>
     <div class="field" id="inbMemoWrap" style="display:none">
-      <label>対応条件メモ（例：日本語OK・英語OK・韓国語対応）</label>
+      <label>対応条件</label>
       <input type="text" id="fInbMemo" placeholder="条件を入力（任意）" maxlength="30">
     </div>
     <div class="sheetActs">
@@ -426,10 +426,13 @@ function inbCardHTML(c){
     ?`<img class="photo" src="${esc(inbSrc)}" alt="" onerror="this.src='${fallback}'">`
     :(c.photo?`<img class="photo" src="${esc(c.photo)}" alt="">`
       :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`);
-  const memo=inbShowMemo&&c.inbMemo
-    ?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:5px 6px;text-align:center;line-height:1.3;">${esc(c.inbMemo)}</div>`
+  const overlay=inbShowMemo
+    ?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.62);color:#fff;padding:5px 6px;text-align:center;line-height:1.4;">
+        <div style="font-size:12px;font-weight:800;">${esc(c.name||'')}</div>
+        ${c.inbMemo?`<div style="font-size:11px;font-weight:600;opacity:.9;margin-top:2px;">${esc(c.inbMemo)}</div>`:''}
+      </div>`
     :'';
-  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}${memo}</div>`;
+  return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}${overlay}</div>`;
 }
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
