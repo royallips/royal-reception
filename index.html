@@ -469,7 +469,9 @@ function paintStaff(){
     ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
     : casts;
   const toMin=t=>{ if(!t)return 9999; const[h,m]=t.split(':').map(Number); return h*60+m; };
-  const sortFn=filtered?(a,b)=>toMin(attendInfo[a.gid]?.shiftStart)-toMin(attendInfo[b.gid]?.shiftStart):()=>0;
+  const sortFn=filtered
+    ?(a,b)=>toMin(attendInfo[a.gid]?.shiftStart)-toMin(attendInfo[b.gid]?.shiftStart)
+    :(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');
   const list=[...base.filter(c=>!c.sold).sort(sortFn),...base.filter(c=>c.sold)];
   let html=`<div class="chBar">
     <button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
