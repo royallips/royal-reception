@@ -413,14 +413,11 @@ function renderInbound(){
     <button class="chBtn ${inbShowMemo?'active':''}" onclick="toggleInbMemo()" style="margin-left:8px">条件</button>
   </div>`;
   if(inbShowMemo){
-    html+='<div style="padding:8px 14px 30px;">';
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;padding:6px 10px;height:calc(100% - 50px);align-content:start;">`;
     for(const c of list){
-      html+=`<div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);gap:12px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:${tint(c.name)};flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;">${esc((c.name||'')[0]||'')}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:15px;font-weight:700;color:var(--ink);">${esc(c.name||'')}</div>
-          ${c.inbMemo?`<div style="font-size:13px;color:var(--gray);margin-top:2px;">${esc(c.inbMemo)}</div>`:`<div style="font-size:13px;color:var(--line);">—</div>`}
-        </div>
+      html+=`<div style="display:flex;flex-direction:column;justify-content:center;padding:7px 10px;border-bottom:1px solid var(--line);">
+        <div style="font-size:14px;font-weight:700;color:var(--ink);">${esc(c.name||'')}</div>
+        <div style="font-size:12px;color:${c.inbMemo?'var(--gray)':'var(--line)'};margin-top:1px;">${c.inbMemo?esc(c.inbMemo):'—'}</div>
       </div>`;
     }
     html+='</div>';
