@@ -872,8 +872,9 @@ function renderViewerPhoto(c,idx){
   sw.style.display='none'; sw.innerHTML='';
   let url='', onerr='';
   if(viewerInbound){
-    const photos=(c.photos||[]).filter(p=>p);
-    if(!photos.length) photos.push(c.photo||'');
+    const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
+    const regular=(c.photos||[]).filter(p=>p);
+    const photos=inbSrc?[inbSrc,...regular]:(regular.length?regular:[c.photo||'']);
     const safeIdx=Math.max(0,Math.min(idx,photos.length-1));
     url=photos[safeIdx]||'';
     if(photos.length>1){
