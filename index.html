@@ -401,18 +401,18 @@ function custCardHTML(c){
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
 /* ===== インバウンド用 ===== */
-let inbFiltered=false, inbShowMemo=false;
+let inbMode='all'; // 'all' | 'today' | 'memo'
 function renderInbound(){
-  const base=inbFiltered
+  const base=inbMode==='today'
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
     : casts.filter(c=>c.inbound&&!c.sold);
   const list=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html=`<div class="chBar">
-    <button class="chBtn ${inbFiltered?'active':''}" onclick="setInbFilter(true)">本日出勤</button>
-    <button class="chBtn ${!inbFiltered?'active':''}" onclick="setInbFilter(false)" style="margin-left:8px">全員表示</button>
-    <button class="chBtn ${inbShowMemo?'active':''}" onclick="toggleInbMemo()" style="margin-left:8px">条件</button>
+    <button class="chBtn ${inbMode==='today'?'active':''}" onclick="setInbMode('today')">本日出勤</button>
+    <button class="chBtn ${inbMode==='all'?'active':''}" onclick="setInbMode('all')" style="margin-left:8px">全員表示</button>
+    <button class="chBtn ${inbMode==='memo'?'active':''}" onclick="setInbMode('memo')" style="margin-left:8px">条件</button>
   </div>`;
-  if(inbShowMemo){
+  if(inbMode==='memo'){
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;padding:6px 10px;height:calc(100% - 50px);align-content:start;">`;
     for(const c of list){
       html+=`<div style="display:flex;flex-direction:column;justify-content:center;padding:7px 10px;border-bottom:1px solid var(--line);">
@@ -428,8 +428,7 @@ function renderInbound(){
   }
   document.getElementById('main').innerHTML=html;
 }
-function setInbFilter(val){ inbFiltered=val; renderInbound(); }
-function toggleInbMemo(){ inbShowMemo=!inbShowMemo; renderInbound(); }
+function setInbMode(m){ inbMode=m; renderInbound(); }
 function inbCardHTML(c){
   const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
   const fallback=esc(c.photo||'');
@@ -442,7 +441,7 @@ function inbCardHTML(c){
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
   viewerInbound=true; viewerCastId=id;
-  const base=inbFiltered
+  const base=inbMode==='today'
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
     : casts.filter(c=>c.inbound&&!c.sold);
   viewerList=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
