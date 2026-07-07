@@ -548,15 +548,7 @@ function renderSettings(){
     +'<button class="btn ghost sm" onclick="openBulk()">まとめて登録</button>'
     +'<button class="btn ghost sm" onclick="pushCastsToGitHub()" style="margin-left:8px">☁ クラウドに保存</button>'
     +'</div>'
-    +`<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;">
-      <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:12px;">🔒 パスワード変更</div>
-      <div class="field"><label>現在のパスワード</label><input type="password" id="curPass" placeholder="現在のパスワード"></div>
-      <div class="field"><label>新しいパスワード（4文字以上）</label><input type="password" id="newPass" placeholder="新しいパスワード"></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn" onclick="doChangePassword()" style="flex:1">変更する</button>
-        <span id="passMsg" style="font-size:13px;color:var(--danger)"></span>
-      </div>
-    </div>`;
+    ;
   if(list.length===0){
     html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
   }else{
