@@ -511,7 +511,7 @@ async function syncCityHeaven(){
 function renderSettings(){
   const list=[...casts].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   let html='<div class="setWrap">'
-    +'<div class="setHead"><h2>キャスト登録</h2>'
+    +`<div class="setHead"><h2>キャスト登録 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2>`
     +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div>'
     +'<div class="setSubHead">'
     +'<button class="btn ghost sm" onclick="openBulk()">まとめて登録</button>'
