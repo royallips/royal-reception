@@ -273,6 +273,7 @@ let chGirlidSet = new Set();
 let attendInfo = {};
 let suppressClick = false;
 const STORE_KEY = 'royal_reception_v2';
+const SOLD_DATE_KEY = 'royal_reception_sold_date';
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
 
 const SAMPLE = [
@@ -282,6 +283,7 @@ const SAMPLE = [
   ['60143549','わかな'],['44872394','りょうか'],['54563932','らら'],
 ].map(([gid,name])=>({id:'c'+gid,name,photo:'',photos:[''],photoIdx:0,gid,sold:false,shown:false}));
 
+function todayJST(){ const d=new Date(Date.now()+9*3600000); return d.toISOString().slice(0,10); }
 function load(){
   try{
     const v=localStorage.getItem(STORE_KEY);
@@ -291,6 +293,9 @@ function load(){
         if(!c.photos) c.photos=[c.photo||''];
         if(c.photoIdx==null) c.photoIdx=0;
       }
+      // 日付が変わっていたら完売状態をリセット
+      const savedDate=localStorage.getItem(SOLD_DATE_KEY)||'';
+      if(savedDate!==todayJST()) for(const c of casts) c.sold=false;
       return;
     }
   }catch(e){}
@@ -485,20 +490,21 @@ async function syncCityHeaven(){
     attendInfo=data.attendInfo||{};
     chGirlidSet=new Set(girlidList);
     draft=new Set();
+    // シンク時は全キャストの完売状態をリセット（前日などの古い状態をクリア）
+    for(const c of casts) c.sold=false;
     const nowJST=new Date(Date.now()+9*3600000);
     const nowMin=nowJST.getUTCHours()*60+nowJST.getUTCMinutes();
     for(const c of casts){
       if(!c.gid) continue;
       const info=attendInfo[c.gid];
       if(!info) continue;
-      // 出勤データがある場合はまずリセットして、条件に合う場合のみ完売にする
-      c.sold=false;
       if(info.soldOut){ c.sold=true; continue; }
       if(info.shiftEnd){
         const[h,m]=info.shiftEnd.split(':').map(Number);
         if(nowMin>h*60+m){ c.sold=true; continue; }
       }
     }
+    localStorage.setItem(SOLD_DATE_KEY,todayJST());
     save(); paintStaff();
   }catch(e){
     alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
