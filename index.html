@@ -872,15 +872,24 @@ function renderViewerPhoto(c,idx){
   sw.style.display='none'; sw.innerHTML='';
   let url='', onerr='';
   if(viewerInbound){
-    const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
-    const regular=(c.photos||[]).filter(p=>p);
-    const photos=inbSrc?[inbSrc,...regular]:(regular.length?regular:[c.photo||'']);
-    const safeIdx=Math.max(0,Math.min(idx,photos.length-1));
-    url=photos[safeIdx]||'';
-    if(photos.length>1){
-      const labels=['①','②','③','④','⑤'];
-      sw.innerHTML=photos.map((_,i)=>`<button class="${i===safeIdx?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(${i})">${labels[i]||String(i+1)}</button>`).join('');
-      sw.style.display='flex';
+    const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):(c.photo||'');
+    const inbSrc2=c.gid?(PHOTO_BASE+c.gid+'_inb_2.jpg'):'';
+    url=idx===1?inbSrc2:inbSrc;
+    if(inbSrc2){
+      const cacheKey=c.gid+'_inb2';
+      const showSw=()=>{
+        sw.innerHTML=
+          `<button class="${idx===0?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(0)">①</button>`+
+          `<button class="${idx===1?'active':''}" onclick="event.stopPropagation();switchViewerPhoto(1)">②</button>`;
+        sw.style.display='flex';
+      };
+      if(photo2Cache[cacheKey]===true){ showSw(); }
+      else if(photo2Cache[cacheKey]!==false){
+        const probe=new Image();
+        probe.onload=()=>{ photo2Cache[cacheKey]=true; showSw(); };
+        probe.onerror=()=>{ photo2Cache[cacheKey]=false; };
+        probe.src=inbSrc2;
+      }
     }
   } else {
     const p1=c.photo||'';
