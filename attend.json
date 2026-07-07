@@ -136,10 +136,10 @@
       "shiftEnd": "23:00",
       "shiftTime": "19:00〜23:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     }
   },
-  "updated": "2026-07-07T21:30:15.341Z",
+  "updated": "2026-07-07T22:00:18.008Z",
   "date": "7/7",
   "count": 17
 }
