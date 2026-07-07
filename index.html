@@ -159,6 +159,20 @@
     color:#fff;font-size:11px;font-weight:800;border:1.5px solid rgba(255,255,255,.35);}
   .vSwitch button.active{background:rgba(255,255,255,.82);color:var(--wine);border-color:#fff;}
 
+  /* ロック画面 */
+  #lockScreen{position:fixed;inset:0;z-index:200;background:var(--wine);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px;}
+  #lockScreen.hidden{display:none;}
+  #lockScreen .lockLogo{height:72px;}
+  #lockScreen .lockTitle{color:rgba(255,255,255,.55);font-size:13px;font-weight:600;letter-spacing:.08em;margin-top:-8px;}
+  #lockScreen .lockBox{background:rgba(255,255,255,.08);border-radius:18px;padding:28px 28px 24px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;}
+  #lockScreen .lockBox p{color:#fff;font-size:15px;font-weight:700;text-align:center;margin:0;}
+  #lockScreen input[type=password]{width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:18px;text-align:center;letter-spacing:.2em;font-family:inherit;}
+  #lockScreen input[type=password]::placeholder{letter-spacing:normal;font-size:14px;opacity:.5;}
+  #lockScreen input[type=password]:focus{outline:none;border-color:var(--gold);}
+  #lockScreen .lockBtn{width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#fff;font-size:16px;font-weight:800;letter-spacing:.04em;}
+  #lockScreen .lockErr{color:#f87171;font-size:13px;text-align:center;min-height:18px;}
+
   /* モーダル */
   .modal{position:fixed;inset:0;z-index:60;background:rgba(20,8,14,.55);display:none;align-items:center;justify-content:center;padding:20px;}
   .modal.show{display:flex;}
@@ -176,6 +190,17 @@
 </style>
 </head>
 <body>
+
+<div id="lockScreen">
+  <img class="lockLogo" id="lockLogoImg" src="" alt="ROYAL LIPS VIP">
+  <p class="lockTitle">ROYAL LIPS VIP</p>
+  <div class="lockBox">
+    <p>パスワードを入力してください</p>
+    <input type="password" id="lockInput" placeholder="パスワード" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="lockBtn" onclick="tryUnlock()">解除</button>
+    <div class="lockErr" id="lockErr"></div>
+  </div>
+</div>
 
 <header>
   <div class="brand">
@@ -522,7 +547,16 @@ function renderSettings(){
     +'<div class="setSubHead">'
     +'<button class="btn ghost sm" onclick="openBulk()">まとめて登録</button>'
     +'<button class="btn ghost sm" onclick="pushCastsToGitHub()" style="margin-left:8px">☁ クラウドに保存</button>'
-    +'</div>';
+    +'</div>'
+    +`<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:12px;">🔒 パスワード変更</div>
+      <div class="field"><label>現在のパスワード</label><input type="password" id="curPass" placeholder="現在のパスワード"></div>
+      <div class="field"><label>新しいパスワード（4文字以上）</label><input type="password" id="newPass" placeholder="新しいパスワード"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" onclick="doChangePassword()" style="flex:1">変更する</button>
+        <span id="passMsg" style="font-size:13px;color:var(--danger)"></span>
+      </div>
+    </div>`;
   if(list.length===0){
     html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
   }else{
@@ -658,6 +692,20 @@ function reallyDelete(){ if(!editId){ closeConfirm(); return; }
   closeConfirm(); closeEdit(); save(); render(); }
 function closeConfirm(){ document.getElementById('confirmModal').classList.remove('show'); }
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
+
+async function doChangePassword(){
+  const cur=document.getElementById('curPass').value;
+  const next=document.getElementById('newPass').value;
+  const msg=document.getElementById('passMsg');
+  const err=await changePassword(cur,next);
+  if(err){ msg.style.color='var(--danger)'; msg.textContent=err; }
+  else {
+    msg.style.color='#1F8A5B'; msg.textContent='変更しました';
+    document.getElementById('curPass').value='';
+    document.getElementById('newPass').value='';
+  }
+  setTimeout(()=>msg.textContent='',3000);
+}
 
 const GH_TOKEN_KEY='rr_gh_token';
 async function pushCastsToGitHub(){
@@ -826,7 +874,89 @@ function returnSelected(){
   renderCustomer();
 }
 
-load(); render(); syncFromRemote(); if(chGirlidSet.size) paintStaff();
+/* ===== ロック画面 ===== */
+const AUTH_KEY='rr_auth_v2';
+const PASS_KEY='rr_pass_v2';
+const DEFAULT_PASS='royallips';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function initLock(){
+  // ロゴをlock画面にコピー
+  const logo=document.querySelector('.logoImg');
+  if(logo) document.getElementById('lockLogoImg').src=logo.src;
+  // 保存済みパスハッシュがなければデフォルトを設定
+  if(!localStorage.getItem(PASS_KEY)){
+    localStorage.setItem(PASS_KEY,await sha256(DEFAULT_PASS));
+  }
+  // 認証済みチェック
+  if(localStorage.getItem(AUTH_KEY)==='1'){
+    document.getElementById('lockScreen').classList.add('hidden');
+    return;
+  }
+  // ロック画面表示・アプリ側は非表示
+  document.getElementById('lockInput').focus();
+}
+async function tryUnlock(){
+  const input=document.getElementById('lockInput').value;
+  if(!input) return;
+  const hash=await sha256(input);
+  const stored=localStorage.getItem(PASS_KEY)||await sha256(DEFAULT_PASS);
+  if(hash===stored){
+    localStorage.setItem(AUTH_KEY,'1');
+    const ls=document.getElementById('lockScreen');
+    ls.style.opacity='0';ls.style.transition='opacity .3s';
+    setTimeout(()=>ls.classList.add('hidden'),300);
+  } else {
+    const err=document.getElementById('lockErr');
+    err.textContent='パスワードが違います';
+    document.getElementById('lockInput').value='';
+    setTimeout(()=>err.textContent='',2000);
+  }
+}
+async function changePassword(current,next){
+  const curHash=await sha256(current);
+  const stored=localStorage.getItem(PASS_KEY)||await sha256(DEFAULT_PASS);
+  if(curHash!==stored) return '現在のパスワードが違います';
+  if(next.length<4) return 'パスワードは4文字以上にしてください';
+  const newHash=await sha256(next);
+  localStorage.setItem(PASS_KEY,newHash);
+  // 他の端末にも反映するためGitHubにpush
+  await pushPassToGitHub(newHash);
+  return null;
+}
+async function pushPassToGitHub(hash){
+  const token=localStorage.getItem(GH_TOKEN_KEY)||'';
+  if(!token) return;
+  const REPO='royallips/royal-reception';
+  const FILE='app-config.json';
+  try{
+    let sha='';
+    const meta=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,
+      {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    if(meta.ok){const j=await meta.json();sha=j.sha;}
+    const content=btoa(JSON.stringify({passHash:hash}));
+    const body={message:'パスワード更新',content};
+    if(sha) body.sha=sha;
+    await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  }catch(e){}
+}
+async function syncPassFromRemote(){
+  try{
+    const res=await fetch('./app-config.json?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) return;
+    const cfg=await res.json();
+    if(cfg.passHash) localStorage.setItem(PASS_KEY,cfg.passHash);
+  }catch(e){}
+}
+
+load(); syncPassFromRemote(); initLock().then(()=>{ render(); syncFromRemote(); if(chGirlidSet.size) paintStaff(); });
 </script>
 </body>
 </html>
