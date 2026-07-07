@@ -382,7 +382,20 @@ function custCardHTML(c){
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
 }
 /* ===== インバウンド用 ===== */
-let inbMode='all'; // 'all' | 'today' | 'memo'
+let inbMode='all'; // 'all' | 'today' | 'memo' | 'notice'
+let noticeLang='en'; // 'en' | 'ko' | 'zh-tw' | 'zh-cn'
+const NOTICE_LANGS=[
+  {key:'en', label:'English'},
+  {key:'ko', label:'한국어'},
+  {key:'zh-tw', label:'繁體'},
+  {key:'zh-cn', label:'简体'},
+];
+const NOTICE_TEXT={
+  en:'（内容は後ほど設定されます）',
+  ko:'（내용은 나중에 설정됩니다）',
+  'zh-tw':'（內容將於稍後設定）',
+  'zh-cn':'（内容稍后设置）',
+};
 function renderInbound(){
   const base=inbMode==='today'
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
@@ -392,7 +405,16 @@ function renderInbound(){
     <button class="chBtn ${inbMode==='today'?'active':''}" onclick="setInbMode('today')">本日出勤</button>
     <button class="chBtn ${inbMode==='all'?'active':''}" onclick="setInbMode('all')" style="margin-left:8px">全員表示</button>
     <button class="chBtn ${inbMode==='memo'?'active':''}" onclick="setInbMode('memo')" style="margin-left:8px">条件</button>
+    <button class="chBtn ${inbMode==='notice'?'active':''}" onclick="setInbMode('notice')" style="margin-left:8px">注意事項</button>
   </div>`;
+  if(inbMode==='notice'){
+    html+=`<div style="display:flex;gap:8px;padding:10px 14px 0;">
+      ${NOTICE_LANGS.map(l=>`<button class="chBtn ${noticeLang===l.key?'active':''}" onclick="setNoticeLang('${l.key}')">${l.label}</button>`).join('')}
+    </div>`;
+    html+=`<div style="padding:20px 20px;font-size:15px;line-height:2;white-space:pre-wrap;color:var(--ink);">${esc(NOTICE_TEXT[noticeLang]||'')}</div>`;
+    document.getElementById('main').innerHTML=html;
+    return;
+  }
   if(inbMode==='memo'){
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;padding:6px 10px;height:calc(100% - 50px);align-content:start;">`;
     for(const c of list){
@@ -410,6 +432,7 @@ function renderInbound(){
   document.getElementById('main').innerHTML=html;
 }
 function setInbMode(m){ inbMode=m; renderInbound(); }
+function setNoticeLang(lang){ noticeLang=lang; renderInbound(); }
 function inbCardHTML(c){
   const inbSrc=c.gid?(PHOTO_BASE+c.gid+'_inb.jpg'):'';
   const fallback=esc(c.photo||'');
