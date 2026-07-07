@@ -328,7 +328,7 @@ async function syncFromRemote(){
 }
 
 
-function tint(name){ let h=0; for(const ch of name) h=(h*31+ch.charCodeAt(0))%360;
+function tint(name){ let h=0; for(const ch of (name||'?')) h=(h*31+ch.charCodeAt(0))%360;
   return `linear-gradient(150deg,hsl(${h} 42% 46%),hsl(${(h+28)%360} 46% 34%))`; }
 function find(id){ return casts.find(c=>c.id===id); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
@@ -348,7 +348,7 @@ function render(){
 function renderCustomer(){
   cancelSel();
   const list=casts.filter(c=>c.shown)
-    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+    .sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html=`<div class="custBar">
       <button class="resetBtn" onclick="resetCustomer()">リセット</button>
       <button class="resetBtn" onclick="openSelMode()">戻す</button>
@@ -372,7 +372,7 @@ function renderInbound(){
   const base=inbFiltered
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
     : casts.filter(c=>c.inbound&&!c.sold);
-  const list=base.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  const list=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html=`<div class="chBar">
     <button class="chBtn ${inbFiltered?'active':''}" onclick="setInbFilter(true)">本日出勤</button>
     <button class="chBtn ${!inbFiltered?'active':''}" onclick="setInbFilter(false)" style="margin-left:8px">全員表示</button>
@@ -398,7 +398,7 @@ function showInbPhoto(id){
   const base=inbFiltered
     ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
     : casts.filter(c=>c.inbound&&!c.sold);
-  viewerList=base.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  viewerList=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
@@ -515,13 +515,13 @@ async function syncCityHeaven(){
 
 /* ===== 設定（あいうえお順・6列） ===== */
 function renderSettings(){
-  const list=[...casts].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html='<div class="setWrap">'
     +`<div class="setHead"><h2>キャスト登録 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2>`
     +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div>'
     +'<div class="setSubHead">'
     +'<button class="btn ghost sm" onclick="openBulk()">まとめて登録</button>'
-
+    +'<button class="btn ghost sm" onclick="pushCastsToGitHub()" style="margin-left:8px">☁ クラウドに保存</button>'
     +'</div>';
   if(list.length===0){
     html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
@@ -659,6 +659,43 @@ function reallyDelete(){ if(!editId){ closeConfirm(); return; }
 function closeConfirm(){ document.getElementById('confirmModal').classList.remove('show'); }
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
+const GH_TOKEN_KEY='rr_gh_token';
+async function pushCastsToGitHub(){
+  let token=localStorage.getItem(GH_TOKEN_KEY)||'';
+  if(!token){
+    token=prompt('GitHubトークンを入力してください（ghp_で始まるもの）:');
+    if(!token) return;
+    localStorage.setItem(GH_TOKEN_KEY,token);
+  }
+  const REPO='royallips/royal-reception';
+  const FILE='casts.json';
+  try{
+    // 現在のSHAを取得
+    const meta=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,
+      {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    if(!meta.ok) throw new Error('トークンまたはリポジトリのエラー: '+meta.status);
+    const {sha}=await meta.json();
+    // 保存するデータ（name/inbound含む全フィールド、sold/shownは除外）
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound}));
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({message:'キャスト情報を更新',content,sha})
+    });
+    if(!res.ok) throw new Error('保存エラー: '+res.status);
+    alert('GitHubに保存しました。新しい端末でも正しく表示されるようになります。');
+  }catch(e){
+    if(e.message.includes('401')||e.message.includes('403')){
+      localStorage.removeItem(GH_TOKEN_KEY);
+      alert('トークンが無効です。もう一度お試しください。');
+    } else {
+      alert('エラーが発生しました: '+e.message);
+    }
+  }
+}
+
 /* ===== 全画面ビューア ===== */
 let viewerCastId=null, viewerList=[], vs=null, previewMode=false, viewerInbound=false;
 const photo2Cache={};
@@ -667,7 +704,7 @@ function showPhoto(id){
   const c=find(id); if(!c)return;
   viewerCastId=id;
   viewerList=mode==='customer'
-    ? casts.filter(c=>c.shown&&!c.sold).sort((a,b)=>a.name.localeCompare(b.name,'ja'))
+    ? casts.filter(c=>c.shown&&!c.sold).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'))
     : [];
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
