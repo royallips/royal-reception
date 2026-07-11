@@ -10,7 +10,9 @@ if git diff --staged --quiet; then
 else
   COUNT=$(git diff --staged --name-only img/ | wc -l | tr -d ' ')
   git commit -m "写真を追加・更新 (${COUNT}枚)"
+  git stash
   git pull --rebase origin main
+  git stash pop
   if git push; then
     echo ""
     echo "✓ ${COUNT}枚の写真をアップロードしました。"
