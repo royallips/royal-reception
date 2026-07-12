@@ -14,7 +14,12 @@
     "31950172",
     "47651891",
     "64979657",
-    "52456676"
+    "52456676",
+    "62548068",
+    "66752775",
+    "45613662",
+    "64166799",
+    "67203096"
   ],
   "attendInfo": {
     "29708503": {
@@ -66,6 +71,13 @@
       "earliest": null,
       "soldOut": false
     },
+    "45613662": {
+      "shiftStart": "9:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "9:00〜17:00",
+      "earliest": null,
+      "soldOut": true
+    },
     "47651891": {
       "shiftStart": "15:00",
       "shiftEnd": "23:59",
@@ -108,10 +120,24 @@
       "earliest": null,
       "soldOut": false
     },
+    "62548068": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": true
+    },
     "63753374": {
       "shiftStart": "17:00",
       "shiftEnd": "23:59",
       "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "64166799": {
+      "shiftStart": "19:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "19:00〜23:59",
       "earliest": null,
       "soldOut": false
     },
@@ -121,9 +147,23 @@
       "shiftTime": "17:00〜23:59",
       "earliest": null,
       "soldOut": false
+    },
+    "66752775": {
+      "shiftStart": "8:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "8:00〜15:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "67203096": {
+      "shiftStart": "15:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "15:00〜23:59",
+      "earliest": null,
+      "soldOut": true
     }
   },
-  "updated": "2026-07-12T19:00:13.024Z",
+  "updated": "2026-07-12T19:30:19.619Z",
   "date": "7/12",
-  "count": 15
+  "count": 20
 }
