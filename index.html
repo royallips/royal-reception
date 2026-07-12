@@ -256,7 +256,11 @@
       </div>
     </div>
     <div class="checkRow">
-      <label><input type="checkbox" id="fMatt">マット対応</label>
+      <label><input type="checkbox" id="fMatt" onchange="toggleFMatt()">マット対応</label>
+    </div>
+    <div class="field" id="mattMemoWrap" style="display:none">
+      <label>対応条件</label>
+      <input type="text" id="fMattMemo" placeholder="条件を入力（任意）" maxlength="30">
     </div>
     <div class="inbToggle">
       <label>インバウンド対応</label>
@@ -581,7 +585,9 @@ function renderStaff(){
   draft = new Set();
   paintStaff();
 }
+let staffMode='all'; // 'all' | 'matt'
 function paintStaff(){
+  if(staffMode==='matt'){ renderMattList(); return; }
   const filtered = chGirlidSet.size > 0;
   const base = filtered
     ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
@@ -593,7 +599,8 @@ function paintStaff(){
   const list=[...base.filter(c=>!c.sold).sort(sortFn),...base.filter(c=>c.sold)];
   let html=`<div class="chBar">
     <button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
-    <button class="chBtn ${!filtered?'active':''}" onclick="clearChFilter()" style="margin-left:8px">全員表示</button>
+    <button class="chBtn ${!filtered?'active':''}" onclick="setStaffMode('all')" style="margin-left:8px">全員表示</button>
+    <button class="chBtn ${staffMode==='matt'?'active':''}" onclick="setStaffMode('matt')" style="margin-left:8px">マット</button>
   </div>`;
   html+='<div class="pickWrap"><div class="pickGrid">';
   for(const c of list) html+=pcardHTML(c);
@@ -603,8 +610,26 @@ function paintStaff(){
     <button class="done" ${n===0?'disabled':''} onclick="addSelection()">追加</button></div>`;
   document.getElementById('main').innerHTML=html;
 }
+function setStaffMode(m){ staffMode=m; draft=new Set(); paintStaff(); }
+function renderMattList(){
+  const list=casts.filter(c=>c.matt).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  let html=`<div class="chBar">
+    <button id="chSyncBtn" class="chBtn ${chGirlidSet.size>0?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
+    <button class="chBtn" onclick="setStaffMode('all')" style="margin-left:8px">全員表示</button>
+    <button class="chBtn active" onclick="setStaffMode('matt')" style="margin-left:8px">マット</button>
+  </div>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;padding:6px 10px;align-content:start;">`;
+  for(const c of list){
+    html+=`<div style="display:flex;flex-direction:column;justify-content:center;padding:7px 10px;border-bottom:1px solid var(--line);">
+      <div style="font-size:14px;font-weight:700;color:var(--ink);">${esc(c.name||'')}</div>
+      <div style="font-size:12px;color:${c.mattMemo?'var(--gray)':'var(--line)'};margin-top:1px;">${c.mattMemo?esc(c.mattMemo):'—'}</div>
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('main').innerHTML=html;
+}
 function clearChFilter(){
-  chGirlidSet=new Set(); draft=new Set(); paintStaff();
+  chGirlidSet=new Set(); draft=new Set(); staffMode='all'; paintStaff();
 }
 function pcardHTML(c){
   const inner=c.photo
@@ -751,6 +776,11 @@ function setFInbound(val){
 function toggleFInbound(){
   setFInbound(document.getElementById('fInbound').dataset.val!=='1');
 }
+function toggleFMatt(){
+  const checked=document.getElementById('fMatt').checked;
+  document.getElementById('mattMemoWrap').style.display=checked?'block':'none';
+  if(!checked) document.getElementById('fMattMemo').value='';
+}
 function openAdd(){ editId=null;
   document.getElementById('editTitle').textContent='キャストを追加';
   document.getElementById('fName').value='';
@@ -761,6 +791,8 @@ function openAdd(){ editId=null;
   setFInbound(false);
   document.getElementById('fInbMemo').value='';
   document.getElementById('fMatt').checked=false;
+  document.getElementById('mattMemoWrap').style.display='none';
+  document.getElementById('fMattMemo').value='';
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
@@ -772,6 +804,8 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   setFInbound(!!c.inbound);
   document.getElementById('fInbMemo').value=c.inbMemo||'';
   document.getElementById('fMatt').checked=!!c.matt;
+  document.getElementById('mattMemoWrap').style.display=c.matt?'block':'none';
+  document.getElementById('fMattMemo').value=c.mattMemo||'';
   document.getElementById('editModal').classList.add('show');
   updateEditPhoto(); }
 function saveCast(){
@@ -783,11 +817,12 @@ function saveCast(){
   const inbound=document.getElementById('fInbound').dataset.val==='1';
   const inbMemo=inbound?document.getElementById('fInbMemo').value.trim():'';
   const matt=document.getElementById('fMatt').checked;
+  const mattMemo=matt?document.getElementById('fMattMemo').value.trim():'';
   if(editId){
     const c=find(editId);
-    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound; c.inbMemo=inbMemo; c.matt=matt;
+    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound; c.inbMemo=inbMemo; c.matt=matt; c.mattMemo=mattMemo;
   } else{
-    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo,matt});
+    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo,matt,mattMemo});
   }
   closeEdit(); save(); render(); autoSyncToGitHub(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
@@ -832,8 +867,8 @@ async function autoSyncToGitHub(){
       {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
     if(!meta.ok) throw new Error(meta.status);
     const {sha}=await meta.json();
-    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt})=>
-      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt}));
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt,mattMemo})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt,mattMemo}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
       method:'PUT',
@@ -864,8 +899,8 @@ async function pushCastsToGitHub(){
     if(!meta.ok) throw new Error('トークンまたはリポジトリのエラー: '+meta.status);
     const {sha}=await meta.json();
     // 保存するデータ（name/inbound含む全フィールド、sold/shownは除外）
-    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt})=>
-      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt}));
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt,mattMemo})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt,mattMemo}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
       method:'PUT',
