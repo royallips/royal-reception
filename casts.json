@@ -439,7 +439,9 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "基本NG 要確認"
+    "inbMemo": "基本NG 要確認",
+    "matt": true,
+    "mattMemo": ""
   },
   {
     "id": "cmqvgol0t6zrb",
