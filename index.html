@@ -156,6 +156,12 @@
     color:#fff;font-size:11px;font-weight:800;border:1.5px solid rgba(255,255,255,.35);}
   .vSwitch button.active{background:rgba(255,255,255,.82);color:var(--wine);border-color:#fff;}
 
+  /* トースト通知 */
+  #syncToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:rgba(30,30,30,.92);color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;
+    opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:300;white-space:nowrap;}
+  #syncToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
   /* ロック画面 */
   #lockScreen{position:fixed;inset:0;z-index:200;background:var(--wine);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px;}
@@ -220,6 +226,7 @@
   </div>
 </div>
 
+<div id="syncToast"></div>
 <div class="viewer" id="viewer"
   onpointerdown="viewerPD(event)" onpointerup="viewerPU(event)" onpointercancel="vs=null">
   <button class="close" onclick="closeViewer(event)">✕</button>
@@ -773,14 +780,14 @@ function saveCast(){
   } else{
     casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo});
   }
-  closeEdit(); save(); render(); }
+  closeEdit(); save(); render(); autoSyncToGitHub(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
   document.getElementById('confirmName').textContent=(c?c.name:'')+' を完全に削除します。元に戻せません。';
   document.getElementById('confirmModal').classList.add('show'); }
 function reallyDelete(){ if(!editId){ closeConfirm(); return; }
   addDeletedId(editId);
   casts=casts.filter(c=>c.id!==editId);
-  closeConfirm(); closeEdit(); save(); render(); }
+  closeConfirm(); closeEdit(); save(); render(); autoSyncToGitHub(); }
 function closeConfirm(){ document.getElementById('confirmModal').classList.remove('show'); }
 function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editId=null; }
 
@@ -799,6 +806,39 @@ async function doChangePassword(){
 }
 
 const GH_TOKEN_KEY='rr_gh_token';
+let syncToastTimer=null;
+function showSyncToast(msg){
+  const el=document.getElementById('syncToast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(syncToastTimer);
+  syncToastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+async function autoSyncToGitHub(){
+  const token=localStorage.getItem(GH_TOKEN_KEY);
+  if(!token) return;
+  const REPO='royallips/royal-reception';
+  const FILE='casts.json';
+  try{
+    const meta=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,
+      {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    if(!meta.ok) throw new Error(meta.status);
+    const {sha}=await meta.json();
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo}));
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({message:'キャスト情報を更新',content,sha})
+    });
+    if(!res.ok) throw new Error(res.status);
+    showSyncToast('☁ 他の端末に同期しました');
+  }catch(e){
+    if(String(e.message).includes('401')||String(e.message).includes('403'))
+      localStorage.removeItem(GH_TOKEN_KEY);
+    showSyncToast('同期に失敗しました');
+  }
+}
 async function pushCastsToGitHub(){
   let token=localStorage.getItem(GH_TOKEN_KEY)||'';
   if(!token){
