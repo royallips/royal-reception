@@ -610,7 +610,7 @@ function paintStaff(){
     <button class="done" ${n===0?'disabled':''} onclick="addSelection()">追加</button></div>`;
   document.getElementById('main').innerHTML=html;
 }
-function setStaffMode(m){ staffMode=m; draft=new Set(); paintStaff(); }
+function setStaffMode(m){ staffMode=m; draft=new Set(); if(m==='all') chGirlidSet=new Set(); paintStaff(); }
 function renderMattList(){
   const list=casts.filter(c=>c.matt).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html=`<div class="chBar">
@@ -696,7 +696,7 @@ async function syncCityHeaven(){
       }
     }
     localStorage.setItem(SOLD_DATE_KEY,todayJST());
-    save(); paintStaff();
+    staffMode='all'; save(); paintStaff();
   }catch(e){
     alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
     const b=document.getElementById('chSyncBtn');
