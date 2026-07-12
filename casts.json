@@ -9,7 +9,9 @@
     ],
     "photoIdx": 0,
     "inbound": false,
-    "inbMemo": ""
+    "inbMemo": "",
+    "matt": true,
+    "mattMemo": ""
   },
   {
     "id": "cmqv851w175vc",
