@@ -566,7 +566,7 @@
   {
     "id": "cmqvgol0tvps4",
     "gid": "45913102",
-    "name": "ひめか",
+    "name": "ゆき",
     "photo": "https://royallips.github.io/royal-reception/img/45913102.jpg",
     "photos": [
       "https://royallips.github.io/royal-reception/img/45913102.jpg"
@@ -798,6 +798,30 @@
     "photo": "https://royallips.github.io/royal-reception/img/60143549.jpg",
     "photos": [
       "https://royallips.github.io/royal-reception/img/60143549.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": ""
+  },
+  {
+    "id": "c1783415761192",
+    "gid": "66790292",
+    "name": "あすか",
+    "photo": "https://royallips.github.io/royal-reception/img/66790292.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/66790292.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": ""
+  },
+  {
+    "id": "c1783851566844",
+    "gid": "66889784",
+    "name": "しおり",
+    "photo": "https://royallips.github.io/royal-reception/img/66889784.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/66889784.jpg"
     ],
     "photoIdx": 0,
     "inbound": false,
