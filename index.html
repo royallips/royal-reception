@@ -109,6 +109,9 @@
   .chBar .chBtn:disabled{opacity:.5;}
   .inbBadge{position:absolute;top:5px;right:5px;background:var(--gold);color:#fff;
     font-size:9px;font-weight:800;border-radius:5px;padding:2px 5px;line-height:1.2;}
+  .checkRow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .checkRow label{font-size:13px;color:var(--gray);font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .checkRow input[type=checkbox]{width:20px;height:20px;accent-color:var(--wine);cursor:pointer;}
   .inbToggle{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .inbToggle label{font-size:13px;color:var(--gray);font-weight:600;}
   .inbToggle button{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;
@@ -251,6 +254,9 @@
           <input id="fGid" type="text" placeholder="" autocomplete="off" inputmode="numeric"
             oninput="updateEditPhoto()"></div>
       </div>
+    </div>
+    <div class="checkRow">
+      <label><input type="checkbox" id="fMatt">マット対応</label>
     </div>
     <div class="inbToggle">
       <label>インバウンド対応</label>
@@ -754,6 +760,7 @@ function openAdd(){ editId=null;
   document.getElementById('editPhotoWrap').style.display='none';
   setFInbound(false);
   document.getElementById('fInbMemo').value='';
+  document.getElementById('fMatt').checked=false;
   document.getElementById('editModal').classList.add('show');
   setTimeout(()=>document.getElementById('fName').focus(),50); }
 function openEdit(id){ const c=find(id); if(!c)return; editId=id;
@@ -764,6 +771,7 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('nameErr').style.display='none';
   setFInbound(!!c.inbound);
   document.getElementById('fInbMemo').value=c.inbMemo||'';
+  document.getElementById('fMatt').checked=!!c.matt;
   document.getElementById('editModal').classList.add('show');
   updateEditPhoto(); }
 function saveCast(){
@@ -774,11 +782,12 @@ function saveCast(){
   const photos=photo?[photo]:[''];
   const inbound=document.getElementById('fInbound').dataset.val==='1';
   const inbMemo=inbound?document.getElementById('fInbMemo').value.trim():'';
+  const matt=document.getElementById('fMatt').checked;
   if(editId){
     const c=find(editId);
-    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound; c.inbMemo=inbMemo;
+    c.name=name; c.gid=gid; c.photos=photos; c.photo=photo; c.photoIdx=0; c.inbound=inbound; c.inbMemo=inbMemo; c.matt=matt;
   } else{
-    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo});
+    casts.push({id:'c'+Date.now(),name,gid,photo,photos,photoIdx:0,sold:false,shown:false,inbound,inbMemo,matt});
   }
   closeEdit(); save(); render(); autoSyncToGitHub(); }
 function deleteCast(){ if(!editId)return; const c=find(editId);
@@ -823,8 +832,8 @@ async function autoSyncToGitHub(){
       {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
     if(!meta.ok) throw new Error(meta.status);
     const {sha}=await meta.json();
-    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo})=>
-      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo}));
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
       method:'PUT',
@@ -855,8 +864,8 @@ async function pushCastsToGitHub(){
     if(!meta.ok) throw new Error('トークンまたはリポジトリのエラー: '+meta.status);
     const {sha}=await meta.json();
     // 保存するデータ（name/inbound含む全フィールド、sold/shownは除外）
-    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo})=>
-      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo}));
+    const data=casts.map(({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt})=>
+      ({id,gid,name,photo,photos,photoIdx,inbound,inbMemo,matt}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{
       method:'PUT',
