@@ -105,7 +105,8 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "韓国"
+    "inbMemo": "韓国",
+    "matt": true
   },
   {
     "id": "cmqvgol0t00fg",
