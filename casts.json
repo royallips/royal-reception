@@ -698,7 +698,9 @@
     ],
     "photoIdx": 0,
     "inbound": false,
-    "inbMemo": ""
+    "inbMemo": "",
+    "matt": true,
+    "mattMemo": "インターバル20分"
   },
   {
     "id": "cmqvgol0ugvn4",
