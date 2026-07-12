@@ -243,7 +243,9 @@
     ],
     "photoIdx": 0,
     "inbound": false,
-    "inbMemo": ""
+    "inbMemo": "",
+    "matt": true,
+    "mattMemo": "75分〜"
   },
   {
     "id": "cmqvgol0tgegq",
