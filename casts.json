@@ -968,5 +968,17 @@
     "photoIdx": 0,
     "inbound": false,
     "inbMemo": ""
+  },
+  {
+    "id": "c1783854135655",
+    "gid": "36275035",
+    "name": "かおる",
+    "photo": "https://royallips.github.io/royal-reception/img/36275035.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/36275035.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": ""
   }
 ]
