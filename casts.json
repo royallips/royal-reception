@@ -666,8 +666,8 @@
       "https://royallips.github.io/royal-reception/img/22191376.jpg"
     ],
     "photoIdx": 0,
-    "inbound": false,
-    "inbMemo": ""
+    "inbound": true,
+    "inbMemo": "日本語"
   },
   {
     "id": "cmqvgol0ut2ph",
