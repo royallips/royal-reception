@@ -2,7 +2,6 @@
   "girlidList": [
     "63753374",
     "61310198",
-    "49621326",
     "56767761",
     "42094905",
     "48711178",
@@ -43,13 +42,6 @@
       "shiftTime": "16:00〜23:59",
       "earliest": null,
       "soldOut": true
-    },
-    "49621326": {
-      "shiftStart": "16:00",
-      "shiftEnd": "23:30",
-      "shiftTime": "16:00〜23:30",
-      "earliest": null,
-      "soldOut": false
     },
     "52456676": {
       "shiftStart": "9:00",
@@ -115,7 +107,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-07-13T11:30:14.727Z",
+  "updated": "2026-07-13T12:00:19.498Z",
   "date": "7/13",
-  "count": 14
+  "count": 13
 }
