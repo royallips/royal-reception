@@ -117,8 +117,8 @@
     },
     "60143549": {
       "shiftStart": "10:00",
-      "shiftEnd": "16:00",
-      "shiftTime": "10:00〜16:00",
+      "shiftEnd": "14:00",
+      "shiftTime": "10:00〜14:00",
       "earliest": null,
       "soldOut": false
     },
@@ -179,7 +179,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-07-17T09:30:15.318Z",
+  "updated": "2026-07-17T10:00:13.378Z",
   "date": "7/17",
   "count": 22
 }
