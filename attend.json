@@ -97,8 +97,8 @@
     },
     "53809791": {
       "shiftStart": "9:00",
-      "shiftEnd": "23:59",
-      "shiftTime": "9:00〜23:59",
+      "shiftEnd": "22:00",
+      "shiftTime": "9:00〜22:00",
       "earliest": null,
       "soldOut": false
     },
@@ -187,7 +187,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-07-19T15:00:30.207Z",
+  "updated": "2026-07-19T15:30:16.579Z",
   "date": "7/19",
   "count": 23
 }
