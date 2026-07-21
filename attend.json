@@ -46,7 +46,7 @@
       "shiftEnd": "22:00",
       "shiftTime": "9:00〜22:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "39600208": {
       "shiftStart": "15:00",
@@ -88,7 +88,7 @@
       "shiftEnd": "21:00",
       "shiftTime": "9:00〜21:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "54787923": {
       "shiftStart": "9:00",
@@ -203,7 +203,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-07-21T18:00:14.202Z",
+  "updated": "2026-07-21T18:30:13.746Z",
   "date": "7/21",
   "count": 25
 }
