@@ -1,7 +1,6 @@
 {
   "girlidList": [
     "37649668",
-    "63753374",
     "54787923",
     "42844100",
     "56646024",
@@ -30,9 +29,9 @@
       "soldOut": true
     },
     "34893182": {
-      "shiftStart": "20:00",
+      "shiftStart": "20:30",
       "shiftEnd": "23:59",
-      "shiftTime": "20:00〜23:59",
+      "shiftTime": "20:30〜23:59",
       "earliest": null,
       "soldOut": false
     },
@@ -118,7 +117,7 @@
       "shiftEnd": "20:00",
       "shiftTime": "10:00〜20:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "60090263": {
       "shiftStart": "19:00",
@@ -148,13 +147,6 @@
       "earliest": null,
       "soldOut": true
     },
-    "63753374": {
-      "shiftStart": "15:00",
-      "shiftEnd": "23:59",
-      "shiftTime": "15:00〜23:59",
-      "earliest": null,
-      "soldOut": false
-    },
     "64979657": {
       "shiftStart": "13:00",
       "shiftEnd": "19:00",
@@ -163,7 +155,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-07-23T19:00:16.278Z",
+  "updated": "2026-07-23T19:30:30.656Z",
   "date": "7/23",
-  "count": 20
+  "count": 19
 }
