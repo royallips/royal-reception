@@ -99,7 +99,7 @@
       "shiftEnd": "16:00",
       "shiftTime": "10:00〜16:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "52596406": {
       "shiftStart": "17:00",
@@ -179,7 +179,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-08-04T12:30:22.018Z",
+  "updated": "2026-08-04T13:00:18.635Z",
   "date": "8/4",
   "count": 22
 }
