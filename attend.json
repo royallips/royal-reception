@@ -33,8 +33,8 @@
     },
     "8663120": {
       "shiftStart": "8:00",
-      "shiftEnd": "14:00",
-      "shiftTime": "8:00〜14:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "8:00〜16:00",
       "earliest": null,
       "soldOut": false
     },
@@ -179,7 +179,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-08-05T13:30:20.178Z",
+  "updated": "2026-08-05T14:00:18.683Z",
   "date": "8/5",
   "count": 22
 }
