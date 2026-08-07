@@ -19,7 +19,8 @@ function extractText(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
+    // タグを除去する際、数字の前後に来るタグはスペースを入れない（8</td><td>/7 → 8/7 になるよう）
+    .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
 }
