@@ -91,7 +91,6 @@ async function pushToGitHub(filePath, content) {
 }
 
 (async () => {
-  // casts.jsonを取得（ローカルモードはGitHubから、GitHub Actionsはローカルファイル）
   let casts;
   if (isLocalMode) {
     console.log('ローカルモード: GitHubからcasts.jsonを取得中...');
@@ -140,4 +139,12 @@ async function pushToGitHub(filePath, content) {
     fs.writeFileSync(path.join(__dirname, '..', 'attend.json'), json);
     console.log('attend.jsonを書き込みました');
   }
-})();
+})().catch(err => {
+  console.error('\n=== エラーが発生しました ===');
+  console.error(err.message || err);
+  if (String(err.message).includes('401') || String(err.message).includes('403')) {
+    console.error('\n→ GitHubトークンの有効期限が切れている可能性があります。');
+    console.error('  config.local.json の githubToken を新しいトークンに更新してください。');
+  }
+  process.exitCode = 1;
+});
