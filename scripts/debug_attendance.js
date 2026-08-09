@@ -37,15 +37,28 @@ function extractText(html) {
       });
       const text = extractText(await res.text());
 
-      // 日付周辺のテキストを抽出
+      // ページ全体のテキストサンプルを表示（最初の500文字）
+      console.log(`  テキスト冒頭: ${text.slice(0, 300)}`);
+      console.log('  ...');
+
+      // スケジュール・出勤・時刻に関するキーワード周辺
+      const keywords = ['出勤', 'スケジュール', '時', '〜', '受付', `${month}/`, `${month}月`];
+      for (const kw of keywords) {
+        const idx = text.indexOf(kw);
+        if (idx !== -1) {
+          console.log(`  "${kw}" 発見: ...${text.slice(Math.max(0, idx - 20), idx + 60)}...`);
+          break;
+        }
+      }
+
+      // 日付検索
       const idx = text.indexOf(`${month}/${day}`);
       if (idx === -1) {
-        // 8月10日形式も試す
         const idx2 = text.indexOf(`${month}月${day}日`);
         if (idx2 === -1) {
           console.log(`  → "${month}/${day}" も "${month}月${day}日" も見つからず`);
         } else {
-          console.log(`  → "${month}月${day}日" 形式で発見: ...${text.slice(idx2 - 10, idx2 + 50)}...`);
+          console.log(`  → "${month}月${day}日" 形式で発見: ...${text.slice(idx2 - 10, idx2 + 80)}...`);
         }
       } else {
         console.log(`  → "${month}/${day}" 発見: ...${text.slice(idx - 10, idx + 80)}...`);
