@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Debug attendance (show first 3 casts)
+        run: node scripts/debug_attendance.js
+
       - name: Fetch attendance from City Heaven
         run: node scripts/fetch_attendance.js
 
