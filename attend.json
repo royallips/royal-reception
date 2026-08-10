@@ -1,7 +1,177 @@
 {
-  "girlidList": [],
-  "attendInfo": {},
-  "updated": "2026-08-10T20:08:28.329Z",
+  "girlidList": [
+    "37649668",
+    "63753374",
+    "61310198",
+    "26705513",
+    "60068229",
+    "35634888",
+    "56767761",
+    "34893182",
+    "64175353",
+    "12796377",
+    "42094905",
+    "60353825",
+    "64571430",
+    "53809791",
+    "52456676",
+    "44872394",
+    "60090263",
+    "45613662",
+    "64166799",
+    "61334021",
+    "65490674"
+  ],
+  "attendInfo": {
+    "12796377": {
+      "shiftStart": "8:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "8:00〜15:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "26705513": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "34893182": {
+      "shiftStart": "20:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "20:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "35634888": {
+      "shiftStart": "8:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "8:00〜17:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "37649668": {
+      "shiftStart": "9:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "9:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "42094905": {
+      "shiftStart": "22:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "22:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "44872394": {
+      "shiftStart": "10:00",
+      "shiftEnd": "18:30",
+      "shiftTime": "10:00〜18:30",
+      "earliest": null,
+      "soldOut": true
+    },
+    "45613662": {
+      "shiftStart": "9:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "9:00〜17:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "52456676": {
+      "shiftStart": "9:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "9:00〜16:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "53809791": {
+      "shiftStart": "8:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "8:00〜15:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "56767761": {
+      "shiftStart": "10:00",
+      "shiftEnd": "19:00",
+      "shiftTime": "10:00〜19:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "60068229": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "60090263": {
+      "shiftStart": "20:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "20:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "60353825": {
+      "shiftStart": "8:00",
+      "shiftEnd": "16:30",
+      "shiftTime": "8:00〜16:30",
+      "earliest": null,
+      "soldOut": true
+    },
+    "61310198": {
+      "shiftStart": "19:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "19:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "61334021": {
+      "shiftStart": "10:30",
+      "shiftEnd": "16:00",
+      "shiftTime": "10:30〜16:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "63753374": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "64166799": {
+      "shiftStart": "17:00",
+      "shiftEnd": "20:00",
+      "shiftTime": "17:00〜20:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "64175353": {
+      "shiftStart": "20:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "20:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "64571430": {
+      "shiftStart": "10:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "10:00〜15:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "65490674": {
+      "shiftStart": "12:00",
+      "shiftEnd": "20:00",
+      "shiftTime": "12:00〜20:00",
+      "earliest": null,
+      "soldOut": true
+    }
+  },
+  "updated": "2026-08-10T20:30:17.007Z",
   "date": "8/10",
-  "count": 0
+  "count": 21
 }
