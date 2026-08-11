@@ -154,8 +154,8 @@
     },
     "61727974": {
       "shiftStart": "8:00",
-      "shiftEnd": "16:00",
-      "shiftTime": "8:00〜16:00",
+      "shiftEnd": "15:00",
+      "shiftTime": "8:00〜15:00",
       "earliest": null,
       "soldOut": false
     },
@@ -195,7 +195,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-08-12T08:00:17.131Z",
+  "updated": "2026-08-12T08:30:18.461Z",
   "date": "8/12",
   "count": 24
 }
