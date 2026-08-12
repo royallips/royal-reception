@@ -118,6 +118,12 @@ async function pushToGitHub(filePath, content) {
     console.log(`  ${gid}: ${info.shiftTime}${info.earliest ? ` 最短${info.earliest}` : ''}`)
   );
 
+  // 0人の場合は前回データを保持（シティヘブンの一時的なブロック対策）
+  if (working.length === 0) {
+    console.log('⚠ 出勤者が0人のため、前回のデータを保持します。');
+    return;
+  }
+
   const attendInfo = {};
   working.forEach(([gid, info]) => { attendInfo[gid] = info; });
 
