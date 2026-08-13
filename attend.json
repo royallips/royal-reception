@@ -20,7 +20,6 @@
     "54563932",
     "60090263",
     "67203096",
-    "66790292",
     "36275035",
     "65490674"
   ],
@@ -172,13 +171,6 @@
       "earliest": null,
       "soldOut": true
     },
-    "66790292": {
-      "shiftStart": "15:00",
-      "shiftEnd": "23:59",
-      "shiftTime": "15:00〜23:59",
-      "earliest": null,
-      "soldOut": false
-    },
     "67203096": {
       "shiftStart": "17:00",
       "shiftEnd": "23:59",
@@ -187,7 +179,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-08-13T21:00:16.099Z",
+  "updated": "2026-08-13T21:30:32.126Z",
   "date": "8/13",
-  "count": 23
+  "count": 22
 }
