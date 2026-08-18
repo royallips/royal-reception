@@ -2,8 +2,13 @@
   "girlidList": [
     "37649668",
     "63753374",
+    "29708503",
+    "56767761",
     "34893182",
+    "64175353",
+    "42094905",
     "48711178",
+    "60353825",
     "62004148",
     "47651891",
     "64979657",
@@ -23,6 +28,13 @@
       "earliest": null,
       "soldOut": false
     },
+    "29708503": {
+      "shiftStart": "9:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "9:00〜17:00",
+      "earliest": null,
+      "soldOut": false
+    },
     "34893182": {
       "shiftStart": "20:00",
       "shiftEnd": "23:59",
@@ -34,6 +46,13 @@
       "shiftStart": "9:00",
       "shiftEnd": "22:00",
       "shiftTime": "9:00〜22:00",
+      "earliest": null,
+      "soldOut": false
+    },
+    "42094905": {
+      "shiftStart": "19:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "19:00〜23:59",
       "earliest": null,
       "soldOut": false
     },
@@ -58,6 +77,13 @@
       "earliest": null,
       "soldOut": true
     },
+    "56767761": {
+      "shiftStart": "9:00",
+      "shiftEnd": "19:00",
+      "shiftTime": "9:00〜19:00",
+      "earliest": null,
+      "soldOut": false
+    },
     "60090263": {
       "shiftStart": "18:00",
       "shiftEnd": "23:59",
@@ -69,6 +95,13 @@
       "shiftStart": "10:00",
       "shiftEnd": "16:00",
       "shiftTime": "10:00〜16:00",
+      "earliest": null,
+      "soldOut": true
+    },
+    "60353825": {
+      "shiftStart": "8:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "8:00〜17:00",
       "earliest": null,
       "soldOut": true
     },
@@ -100,6 +133,13 @@
       "earliest": null,
       "soldOut": true
     },
+    "64175353": {
+      "shiftStart": "20:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "20:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
     "64979657": {
       "shiftStart": "12:00",
       "shiftEnd": "20:00",
@@ -115,7 +155,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-08-18T14:30:16.349Z",
+  "updated": "2026-08-18T15:00:15.607Z",
   "date": "8/18",
-  "count": 14
+  "count": 19
 }
