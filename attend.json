@@ -1,6 +1,5 @@
 {
   "girlidList": [
-    "3617546",
     "26252454",
     "37649668",
     "54787923",
@@ -28,13 +27,6 @@
     "66790292"
   ],
   "attendInfo": {
-    "3617546": {
-      "shiftStart": "15:30",
-      "shiftEnd": "22:30",
-      "shiftTime": "15:30〜22:30",
-      "earliest": null,
-      "soldOut": true
-    },
     "15301257": {
       "shiftStart": "15:00",
       "shiftEnd": "23:00",
@@ -211,7 +203,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-08-19T18:00:14.431Z",
+  "updated": "2026-08-19T18:30:28.453Z",
   "date": "8/19",
-  "count": 26
+  "count": 25
 }
