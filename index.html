@@ -680,6 +680,7 @@ function addSelection(){
 async function syncCityHeaven(){
   const btn=document.getElementById('chSyncBtn');
   if(btn){btn.disabled=true;btn.textContent='取得中...';}
+  await syncFromRemote();
   try{
     const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error();
