@@ -83,7 +83,9 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "日本語、韓国、台湾"
+    "inbMemo": "日本語、韓国、台湾",
+    "matt": false,
+    "mattMemo": ""
   },
   {
     "id": "cmqvgol0tcex6",
@@ -604,16 +606,6 @@
     "inbMemo": ""
   },
   {
-    "id": "cmqvgol0uwy7k",
-    "gid": "52532979",
-    "name": "ゆずき",
-    "photo": "https://royallips.github.io/royal-reception/img/52532979.jpg",
-    "photos": [
-      "https://royallips.github.io/royal-reception/img/52532979.jpg"
-    ],
-    "photoIdx": 0
-  },
-  {
     "id": "cmqvgol0ub12m",
     "gid": "52456676",
     "name": "ゆな",
@@ -831,7 +823,9 @@
     ],
     "photoIdx": 0,
     "inbound": false,
-    "inbMemo": ""
+    "inbMemo": "",
+    "matt": false,
+    "mattMemo": ""
   },
   {
     "id": "c1783781139428",
@@ -982,14 +976,16 @@
   {
     "id": "c1783851566844",
     "gid": "66889784",
-    "name": "しおり",
+    "name": "しずく",
     "photo": "https://royallips.github.io/royal-reception/img/66889784.jpg",
     "photos": [
       "https://royallips.github.io/royal-reception/img/66889784.jpg"
     ],
     "photoIdx": 0,
     "inbound": false,
-    "inbMemo": ""
+    "inbMemo": "",
+    "matt": false,
+    "mattMemo": ""
   },
   {
     "id": "c1783854135655",
@@ -1014,5 +1010,33 @@
     "photoIdx": 0,
     "inbound": false,
     "inbMemo": ""
+  },
+  {
+    "id": "c1786520516939",
+    "gid": "67746624",
+    "name": "あげは",
+    "photo": "https://royallips.github.io/royal-reception/img/67746624.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/67746624.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": "",
+    "matt": false,
+    "mattMemo": ""
+  },
+  {
+    "id": "c1787320835218",
+    "gid": "67977453",
+    "name": "くれは",
+    "photo": "https://royallips.github.io/royal-reception/img/67977453.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/67977453.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": "",
+    "matt": false,
+    "mattMemo": ""
   }
 ]
