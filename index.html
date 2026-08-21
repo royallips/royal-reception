@@ -720,11 +720,20 @@ async function syncCityHeaven(){
 /* ===== 設定（あいうえお順・6列） ===== */
 function renderSettings(){
   const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  const savedToken=localStorage.getItem(GH_TOKEN_KEY)||'';
+  const tokenStatus=savedToken
+    ?`<span style="color:#1F8A5B">✓ トークン設定済み（${savedToken.slice(0,8)}...）</span>`
+    :`<span style="color:var(--danger)">✗ トークン未設定 — 他の端末に同期されません</span>`;
   let html='<div class="setWrap">'
     +`<div class="setHead"><h2>キャスト登録 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2>`
     +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div>'
     +'<div class="setSubHead">'
     +'<button class="btn ghost sm" onclick="pushCastsToGitHub()">☁ クラウドに保存</button>'
+    +`<div style="margin-top:10px;display:flex;align-items:center;gap:8px;">`
+    +`<input id="ghTokenInput" type="password" placeholder="GitHubトークン（ghp_で始まるもの）" value="${esc(savedToken)}" style="flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card);color:var(--ink);">`
+    +`<button class="btn ghost sm" onclick="saveGHToken()">保存</button>`
+    +`</div>`
+    +`<div style="font-size:11px;margin-top:4px;">${tokenStatus}</div>`
     +'</div>'
     ;
   if(list.length===0){
@@ -895,6 +904,17 @@ async function autoSyncToGitHub(){
       localStorage.removeItem(GH_TOKEN_KEY);
     showSyncToast('同期に失敗しました');
   }
+}
+function saveGHToken(){
+  const val=document.getElementById('ghTokenInput').value.trim();
+  if(val){
+    localStorage.setItem(GH_TOKEN_KEY,val);
+    showSyncToast('✓ トークンを保存しました');
+  } else {
+    localStorage.removeItem(GH_TOKEN_KEY);
+    showSyncToast('トークンを削除しました');
+  }
+  renderSettings();
 }
 async function pushCastsToGitHub(){
   let token=localStorage.getItem(GH_TOKEN_KEY)||'';
