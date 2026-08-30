@@ -32,7 +32,7 @@
       "shiftEnd": "23:59",
       "shiftTime": "15:00〜23:59",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "9104523": {
       "shiftStart": "12:00",
@@ -67,7 +67,7 @@
       "shiftEnd": "22:00",
       "shiftTime": "8:00〜22:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "39600208": {
       "shiftStart": "15:00",
@@ -155,8 +155,8 @@
     },
     "62004148": {
       "shiftStart": "16:00",
-      "shiftEnd": "23:00",
-      "shiftTime": "16:00〜23:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "16:00〜23:59",
       "earliest": null,
       "soldOut": false
     },
@@ -203,7 +203,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-08-30T21:30:15.507Z",
+  "updated": "2026-08-30T22:00:17.686Z",
   "date": "8/30",
   "count": 25
 }
