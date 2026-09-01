@@ -20,7 +20,6 @@
     "64166799",
     "66790292",
     "67746624",
-    "67977453",
     "68251097"
   ],
   "attendInfo": {
@@ -164,13 +163,6 @@
       "earliest": null,
       "soldOut": false
     },
-    "67977453": {
-      "shiftStart": "17:00",
-      "shiftEnd": "23:59",
-      "shiftTime": "17:00〜23:59",
-      "earliest": null,
-      "soldOut": false
-    },
     "68251097": {
       "shiftStart": "10:00",
       "shiftEnd": "16:00",
@@ -179,7 +171,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-09-01T11:00:12.537Z",
+  "updated": "2026-09-01T11:30:11.771Z",
   "date": "9/1",
-  "count": 22
+  "count": 21
 }
