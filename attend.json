@@ -183,9 +183,9 @@
       "soldOut": false
     },
     "64166799": {
-      "shiftStart": "10:00",
+      "shiftStart": "8:00",
       "shiftEnd": "17:00",
-      "shiftTime": "10:00〜17:00",
+      "shiftTime": "8:00〜17:00",
       "earliest": null,
       "soldOut": false
     },
@@ -211,7 +211,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-09-03T07:00:18.261Z",
+  "updated": "2026-09-03T08:00:14.777Z",
   "date": "9/3",
   "count": 26
 }
