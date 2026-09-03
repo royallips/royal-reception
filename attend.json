@@ -197,9 +197,9 @@
       "soldOut": true
     },
     "67746624": {
-      "shiftStart": "12:30",
+      "shiftStart": "13:00",
       "shiftEnd": "23:59",
-      "shiftTime": "12:30〜23:59",
+      "shiftTime": "13:00〜23:59",
       "earliest": null,
       "soldOut": false
     },
@@ -211,7 +211,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-09-03T10:00:13.291Z",
+  "updated": "2026-09-03T10:30:14.175Z",
   "date": "9/3",
   "count": 26
 }
