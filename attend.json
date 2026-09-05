@@ -150,9 +150,9 @@
       "soldOut": true
     },
     "64175353": {
-      "shiftStart": "10:00",
-      "shiftEnd": "16:00",
-      "shiftTime": "10:00〜16:00",
+      "shiftStart": "19:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "19:00〜23:59",
       "earliest": null,
       "soldOut": true
     },
@@ -171,7 +171,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-09-05T17:00:17.316Z",
+  "updated": "2026-09-05T17:30:14.905Z",
   "date": "9/5",
   "count": 21
 }
