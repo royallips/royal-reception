@@ -357,7 +357,9 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "アジア圏のみ"
+    "inbMemo": "アジア圏のみ",
+    "matt": true,
+    "mattMemo": ""
   },
   {
     "id": "cmqvgol0t7nth",
