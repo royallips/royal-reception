@@ -261,7 +261,9 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "日本語話せる"
+    "inbMemo": "日本語話せる",
+    "matt": true,
+    "mattMemo": "75〜"
   },
   {
     "id": "cmqvgol0t02zn",
