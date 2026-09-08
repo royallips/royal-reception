@@ -185,7 +185,9 @@
     ],
     "photoIdx": 0,
     "inbound": true,
-    "inbMemo": "日本語× 50のみ　台湾NG"
+    "inbMemo": "日本語× 50のみ　台湾NG",
+    "matt": true,
+    "mattMemo": ""
   },
   {
     "id": "cmqvgol0t28v7",
