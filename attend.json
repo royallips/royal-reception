@@ -144,7 +144,7 @@
       "shiftEnd": "16:00",
       "shiftTime": "10:00〜16:00",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "61310198": {
       "shiftStart": "19:00",
@@ -158,7 +158,7 @@
       "shiftEnd": "15:30",
       "shiftTime": "9:30〜15:30",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "62548068": {
       "shiftStart": "17:00",
@@ -203,7 +203,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-09-11T12:00:19.055Z",
+  "updated": "2026-09-11T13:00:17.513Z",
   "date": "9/11",
   "count": 25
 }
