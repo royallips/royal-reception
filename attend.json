@@ -157,7 +157,7 @@
       "shiftEnd": "23:59",
       "shiftTime": "17:00〜23:59",
       "earliest": null,
-      "soldOut": false
+      "soldOut": true
     },
     "63465479": {
       "shiftStart": "8:00",
@@ -195,7 +195,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-09-11T21:30:18.295Z",
+  "updated": "2026-09-11T22:00:19.488Z",
   "date": "9/11",
   "count": 24
 }
