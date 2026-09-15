@@ -1050,5 +1050,19 @@
     "inbMemo": "",
     "matt": false,
     "mattMemo": ""
+  },
+  {
+    "id": "c1789485289936",
+    "gid": "68681290",
+    "name": "りん",
+    "photo": "https://royallips.github.io/royal-reception/img/68681290.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/68681290.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": "",
+    "matt": false,
+    "mattMemo": ""
   }
 ]
