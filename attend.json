@@ -1,94 +1,126 @@
 {
   "girlidList": [
+    "3617546",
+    "26252454",
     "37649668",
+    "63753374",
+    "54787923",
+    "42844100",
     "60068229",
-    "52596406",
+    "41627717",
     "64175353",
     "42094905",
     "53809791",
     "54355388",
     "47651891",
     "52456676",
-    "15301257",
+    "34561712",
     "10823958",
     "63465479",
     "60143549",
     "62548068",
-    "66752775",
     "45613662",
-    "64583373",
+    "66889784",
     "65490674",
     "67746624",
     "68251097"
   ],
   "attendInfo": {
+    "3617546": {
+      "shiftStart": "15:30",
+      "shiftEnd": "22:30",
+      "shiftTime": "15:30〜22:30",
+      "earliest": null,
+      "soldOut": false
+    },
     "10823958": {
       "shiftStart": "8:00",
-      "shiftEnd": "14:00",
-      "shiftTime": "8:00〜14:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "8:00〜17:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
-    "15301257": {
-      "shiftStart": "16:00",
-      "shiftEnd": "23:00",
-      "shiftTime": "16:00〜23:00",
+    "26252454": {
+      "shiftStart": "8:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "8:00〜16:00",
+      "earliest": null,
+      "soldOut": false
+    },
+    "34561712": {
+      "shiftStart": "10:00",
+      "shiftEnd": "15:30",
+      "shiftTime": "10:00〜15:30",
       "earliest": null,
       "soldOut": true
     },
     "37649668": {
-      "shiftStart": "9:00",
-      "shiftEnd": "17:00",
-      "shiftTime": "9:00〜17:00",
+      "shiftStart": "15:00",
+      "shiftEnd": "22:00",
+      "shiftTime": "15:00〜22:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
+    },
+    "41627717": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
+      "earliest": null,
+      "soldOut": false
     },
     "42094905": {
-      "shiftStart": "8:00",
+      "shiftStart": "22:00",
       "shiftEnd": "23:59",
-      "shiftTime": "8:00〜23:59",
+      "shiftTime": "22:00〜23:59",
+      "earliest": null,
+      "soldOut": false
+    },
+    "42844100": {
+      "shiftStart": "17:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "17:00〜23:59",
       "earliest": null,
       "soldOut": false
     },
     "45613662": {
       "shiftStart": "9:00",
-      "shiftEnd": "16:00",
-      "shiftTime": "9:00〜16:00",
+      "shiftEnd": "18:00",
+      "shiftTime": "9:00〜18:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "47651891": {
       "shiftStart": "15:00",
       "shiftEnd": "23:59",
       "shiftTime": "15:00〜23:59",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "52456676": {
-      "shiftStart": "9:30",
-      "shiftEnd": "17:00",
-      "shiftTime": "9:30〜17:00",
+      "shiftStart": "9:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "9:00〜16:00",
       "earliest": null,
-      "soldOut": true
-    },
-    "52596406": {
-      "shiftStart": "17:00",
-      "shiftEnd": "23:59",
-      "shiftTime": "17:00〜23:59",
-      "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "53809791": {
       "shiftStart": "9:30",
-      "shiftEnd": "20:00",
-      "shiftTime": "9:30〜20:00",
+      "shiftEnd": "16:00",
+      "shiftTime": "9:30〜16:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "54355388": {
       "shiftStart": "10:00",
       "shiftEnd": "15:30",
       "shiftTime": "10:00〜15:30",
+      "earliest": null,
+      "soldOut": false
+    },
+    "54787923": {
+      "shiftStart": "9:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "9:00〜17:00",
       "earliest": null,
       "soldOut": true
     },
@@ -97,63 +129,63 @@
       "shiftEnd": "23:59",
       "shiftTime": "17:00〜23:59",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "60143549": {
       "shiftStart": "10:00",
       "shiftEnd": "16:00",
       "shiftTime": "10:00〜16:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "62548068": {
       "shiftStart": "17:00",
       "shiftEnd": "23:59",
       "shiftTime": "17:00〜23:59",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "63465479": {
-      "shiftStart": "8:00",
-      "shiftEnd": "12:30",
-      "shiftTime": "8:00〜12:30",
+      "shiftStart": "10:00",
+      "shiftEnd": "17:00",
+      "shiftTime": "10:00〜17:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
+    },
+    "63753374": {
+      "shiftStart": "15:00",
+      "shiftEnd": "23:59",
+      "shiftTime": "15:00〜23:59",
+      "earliest": null,
+      "soldOut": false
     },
     "64175353": {
       "shiftStart": "20:00",
       "shiftEnd": "23:59",
       "shiftTime": "20:00〜23:59",
       "earliest": null,
-      "soldOut": true
-    },
-    "64583373": {
-      "shiftStart": "11:30",
-      "shiftEnd": "15:30",
-      "shiftTime": "11:30〜15:30",
-      "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "65490674": {
       "shiftStart": "9:00",
       "shiftEnd": "17:00",
       "shiftTime": "9:00〜17:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
-    "66752775": {
-      "shiftStart": "10:00",
-      "shiftEnd": "17:00",
-      "shiftTime": "10:00〜17:00",
+    "66889784": {
+      "shiftStart": "19:00",
+      "shiftEnd": "22:00",
+      "shiftTime": "19:00〜22:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "67746624": {
-      "shiftStart": "10:00",
+      "shiftStart": "14:00",
       "shiftEnd": "23:59",
-      "shiftTime": "10:00〜23:59",
+      "shiftTime": "14:00〜23:59",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "68251097": {
       "shiftStart": "10:00",
@@ -163,7 +195,7 @@
       "soldOut": true
     }
   },
-  "updated": "2026-09-15T22:30:21.127Z",
-  "date": "9/15",
-  "count": 20
+  "updated": "2026-09-16T08:30:15.557Z",
+  "date": "9/16",
+  "count": 24
 }
