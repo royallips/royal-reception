@@ -152,7 +152,7 @@
       "shiftEnd": "16:00",
       "shiftTime": "8:00〜16:00",
       "earliest": null,
-      "soldOut": true
+      "soldOut": false
     },
     "62004148": {
       "shiftStart": "18:00",
@@ -211,7 +211,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-09-27T11:00:15.414Z",
+  "updated": "2026-09-27T11:30:16.679Z",
   "date": "9/27",
   "count": 26
 }
