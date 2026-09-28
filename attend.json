@@ -122,8 +122,8 @@
     },
     "63378450": {
       "shiftStart": "14:00",
-      "shiftEnd": "20:00",
-      "shiftTime": "14:00〜20:00",
+      "shiftEnd": "21:00",
+      "shiftTime": "14:00〜21:00",
       "earliest": null,
       "soldOut": false
     },
@@ -163,7 +163,7 @@
       "soldOut": false
     }
   },
-  "updated": "2026-09-28T19:00:16.033Z",
+  "updated": "2026-09-28T19:30:18.305Z",
   "date": "9/28",
   "count": 20
 }
