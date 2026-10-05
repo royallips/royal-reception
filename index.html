@@ -60,8 +60,6 @@
   .card.sold .photo,.card.sold .ph{filter:grayscale(.7) brightness(.45);}
   .card .soldMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:#fff;font-size:30px;font-weight:900;letter-spacing:.2em;text-shadow:0 2px 8px rgba(0,0,0,.6);}
-  .card .manualTag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;
-    font-size:12px;font-weight:800;border-radius:7px;padding:3px 8px;}
   .pcard.site{opacity:.45;}
   .siteTag{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;
     background:rgba(0,0,0,.6);color:#fff;font-size:15px;font-weight:800;border-radius:10px;padding:5px 14px;}
@@ -438,10 +436,8 @@ function todayCardHTML(c){
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
   const id=JSON.stringify(c.id);
   const time=shiftLabel(c);
-  const isManual=!(c.gid&&attendSet.has(c.gid));
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}
     ${c.sold?'<div class="soldMark">完売</div>':''}
-    ${isManual?'<div class="manualTag">手動</div>':''}
     ${time||(viewMode==='matt'&&c.mattMemo)?`<div class="ctime">${esc(time)}${viewMode==='matt'&&c.mattMemo?(time?'<br>':'')+esc(c.mattMemo):''}</div>`:''}
     <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>${c.sold?'完売':'出勤'}</button></div>`;
 }
