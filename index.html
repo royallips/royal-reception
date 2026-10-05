@@ -665,15 +665,50 @@ function applyAutoSold(){
   }
   if(changed){ day.autoSold=[...done]; saveDay(); save(); }
 }
+/* 利用表（ロイヤル利用管理）から直接取得。URL・パスワードはこの端末の localStorage のみに保存 */
+const SHEET_URL_KEY='rr_sheet_url', SHEET_PASS_KEY='rr_sheet_pass';
+function sheetConf(){ try{ return {url:localStorage.getItem(SHEET_URL_KEY)||'',pass:localStorage.getItem(SHEET_PASS_KEY)||''}; }catch(e){ return {url:'',pass:''}; } }
+// '20.5' → '20:30'、L（ラスト）→ '24:00'（scripts/fetch_attendance.py と同じ）
+function fmtSheetTime(v){
+  const s=String(v??'').trim();
+  if(s==='L'||s==='24'||s==='24:00') return '24:00';
+  const f=parseFloat(s); if(isNaN(f)) return s;
+  const h=Math.floor(f); return h+':'+String(Math.round((f-h)*60)).padStart(2,'0');
+}
+async function fetchSheetAttendance(){
+  const {url,pass}=sheetConf();
+  const res=await fetch(url+(url.includes('?')?'&':'?')+'action=get&rev=0&pass='+encodeURIComponent(pass)+'&_t='+Date.now(),{cache:'no-store'});
+  const j=await res.json();
+  if(!j.ok) throw new Error(j.error||'利用表の取得に失敗');
+  const d=typeof j.data==='string'?JSON.parse(j.data):j.data;
+  const today=todayJST();
+  const names=new Map((d.casts||[]).map(c=>[c.id,(c.name||'').trim()]));
+  const list=[];
+  for(const [k,r] of Object.entries(d.records||{})){
+    if(!k.endsWith('_'+today)||!r||r._deleted) continue;
+    if((r.status!=='work'&&r.status!=='furikae')||!r.start) continue;   // 利用・振替のみ
+    if(r.hideNet||r.dummy) continue;                                      // ネット非掲載・ダミーは除外
+    const name=names.get(k.slice(0,-today.length-1)); if(!name) continue;
+    const st=fmtSheetTime(r.start), en=fmtSheetTime((r.start2?r.end2:r.end)||'L');   // 中抜けは最初〜最後
+    list.push({name,start:st,end:en,shiftTime:st+'〜'+en});
+  }
+  return {date:today,list};
+}
 async function refreshAttendance(manual){
   const btn=document.getElementById('chSyncBtn');
   if(manual&&btn){ btn.disabled=true; btn.textContent='取得中...'; }
   checkNewDay();
   if(manual) await syncFromRemote();
   try{
-    const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
-    if(!res.ok) throw new Error();
-    const data=await res.json();
+    let data=null;
+    if(sheetConf().url&&sheetConf().pass){
+      try{ data=await fetchSheetAttendance(); }catch(e){ console.warn('利用表から取得できず attend.json を使用',e); }
+    }
+    if(!data){
+      const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
+      if(!res.ok) throw new Error();
+      data=await res.json();
+    }
     attendMap=new Map(data.date===todayJST()?(data.list||[]).map(x=>[x.name,x]):[]);
     applyAutoSold();
     if(manual) showSyncToast(`出勤情報を更新しました（${casts.filter(isAttending).length}名）`);
@@ -723,6 +758,13 @@ function addToToday(){
 }
 
 /* ===== 設定（あいうえお順・6列） ===== */
+function saveSheetConf(){
+  const url=document.getElementById('sheetUrl').value.trim();
+  const pass=document.getElementById('sheetPass').value.trim();
+  try{ localStorage.setItem(SHEET_URL_KEY,url); localStorage.setItem(SHEET_PASS_KEY,pass); }catch(e){}
+  showSyncToast(url&&pass?'✓ 利用表の接続を保存しました':'利用表の接続を解除しました');
+  if(url&&pass) refreshAttendance(true);
+}
 function renderSettings(){
   const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html='<div class="setWrap">'
@@ -755,6 +797,16 @@ function renderSettings(){
     }
     html+='</div>';
   }
+  const sc=sheetConf();
+  html+=`<div class="setHead" style="margin-top:28px"><h2>利用表の接続</h2></div>
+    <p style="margin:0 0 10px;font-size:12px;color:var(--gray);">設定すると「更新」ボタンで利用表から本日出勤を直接取得します（この端末にだけ保存）。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;max-width:760px;">
+      <input id="sheetUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(sc.url)}" autocomplete="off"
+        style="flex:2;min-width:240px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-family:inherit;">
+      <input id="sheetPass" type="password" placeholder="パスワード" value="${esc(sc.pass)}" autocomplete="off"
+        style="flex:1;min-width:120px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-family:inherit;">
+      <button class="btn sm" onclick="saveSheetConf()">保存</button>
+    </div>`;
   html+='</div>';
   document.getElementById('main').innerHTML=html;
 }
@@ -1143,7 +1195,17 @@ document.addEventListener('fullscreenchange',updateFsBtn);
 document.addEventListener('webkitfullscreenchange',updateFsBtn);
 
 load(); syncPassFromRemote(); initLock().then(()=>{ render(); syncFromRemote(); refreshAttendance(false); });
-setInterval(()=>refreshAttendance(false),5*60*1000);
+// 毎日午前7時（日本時間）に1回だけ本日出勤・キャスト情報を取り直す（全画面表示を保つためページの再読み込みはしない）
+function scheduleDailyRefresh(){
+  const nowJST=Date.now()+9*3600000;
+  let next=Math.floor(nowJST/86400000)*86400000+7*3600000;   // 今日の7:00（JST）
+  if(next<=nowJST) next+=86400000;
+  setTimeout(async()=>{
+    checkNewDay(); await syncFromRemote(); await refreshAttendance(false);
+    scheduleDailyRefresh();
+  },next-nowJST);
+}
+scheduleDailyRefresh();
 </script>
 </body>
 </html>

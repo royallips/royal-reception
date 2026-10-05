@@ -2,7 +2,7 @@ name: Sync Attendance
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '45 21 * * *'   # 毎日 6:45（日本時間）。7:00 の画面更新に間に合うよう少し早めに取得
   workflow_dispatch:
 
 permissions:
