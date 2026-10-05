@@ -1,3 +1,4 @@
 {
-  "githubToken": "ghp_ここにトークンを貼り付ける"
+  "royalUrl": "https://script.google.com/macros/s/ここに利用管理のURL/exec",
+  "royalPass": "ここに利用管理のパスワード"
 }

@@ -14,13 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-
-      - name: Fetch attendance from City Heaven
-        run: node scripts/fetch_attendance.js
+      - name: Fetch attendance from Royal usage sheet
+        env:
+          ROYAL_URL: ${{ secrets.ROYAL_URL }}
+          ROYAL_PASS: ${{ secrets.ROYAL_PASS }}
+        run: python3 scripts/fetch_attendance.py
 
       - name: Commit attend.json
         run: |
@@ -28,4 +26,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add attend.json
           git diff --staged --quiet || git commit -m "Update attendance data [skip ci]"
+          git pull --rebase origin main
           git push
