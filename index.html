@@ -569,7 +569,9 @@ function renderInbound(){
     // 「基本的なサービス」以降は赤文字
     const text=NOTICE_TEXT[noticeLang]||'', from=text.indexOf(NOTICE_RED_FROM[noticeLang]||'\u0000');
     const body=from<0?esc(text):esc(text.slice(0,from))+`<span style="color:var(--danger);">${esc(text.slice(from))}</span>`;
-    html+=`<div style="padding:20px 20px;font-size:15px;line-height:2;white-space:pre-wrap;color:var(--ink);">${body}</div>`;
+    // 英語は文が長いので、スクロールせずに収まるよう少し小さく詰める
+    const fs=noticeLang==='en'?'font-size:13px;line-height:1.65;':'font-size:15px;line-height:2;';
+    html+=`<div style="padding:20px 20px;${fs}white-space:pre-wrap;color:var(--ink);">${body}</div>`;
     document.getElementById('main').innerHTML=html;
     return;
   }
