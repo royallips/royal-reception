@@ -140,6 +140,18 @@
     "inbMemo": "韓国"
   },
   {
+    "id": "cmqvgol0ttcp6",
+    "gid": "50809154",
+    "name": "えま",
+    "photo": "https://royallips.github.io/royal-reception/img/50809154.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/50809154.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": true,
+    "inbMemo": "要確認"
+  },
+  {
     "id": "cmqvgol0tvzay",
     "gid": "17452736",
     "name": "えみり",
@@ -602,12 +614,34 @@
     "inbMemo": ""
   },
   {
+    "id": "cmqvgol0uwy7k",
+    "gid": "52532979",
+    "name": "ゆずき",
+    "photo": "https://royallips.github.io/royal-reception/img/52532979.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/52532979.jpg"
+    ],
+    "photoIdx": 0
+  },
+  {
     "id": "cmqvgol0ub12m",
     "gid": "52456676",
     "name": "ゆな",
     "photo": "https://royallips.github.io/royal-reception/img/52456676.jpg",
     "photos": [
       "https://royallips.github.io/royal-reception/img/52456676.jpg"
+    ],
+    "photoIdx": 0,
+    "inbound": false,
+    "inbMemo": ""
+  },
+  {
+    "id": "cmqvgol0u3kzz",
+    "gid": "61413203",
+    "name": "ゆめ",
+    "photo": "https://royallips.github.io/royal-reception/img/61413203.jpg",
+    "photos": [
+      "https://royallips.github.io/royal-reception/img/61413203.jpg"
     ],
     "photoIdx": 0,
     "inbound": false,
@@ -960,7 +994,7 @@
   {
     "id": "c1783851566844",
     "gid": "66889784",
-    "name": "しずく",
+    "name": "しおり",
     "photo": "https://royallips.github.io/royal-reception/img/66889784.jpg",
     "photos": [
       "https://royallips.github.io/royal-reception/img/66889784.jpg"
