@@ -62,9 +62,6 @@
   .card .soldBtn.active{background:rgba(176,48,80,.55);color:rgba(255,255,255,.8);}
   .card .soldMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:#fff;font-size:30px;font-weight:900;letter-spacing:.2em;text-shadow:0 2px 8px rgba(0,0,0,.6);}
-  .pcard.site{opacity:.45;}
-  .siteTag{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;
-    background:rgba(0,0,0,.6);color:#fff;font-size:15px;font-weight:800;border-radius:10px;padding:5px 14px;}
 
   /* スタッフ用：4列の選択グリッド */
   .pickWrap{padding:12px 12px 84px;}
@@ -290,14 +287,14 @@ let casts = [];          // {id,name,photo,sold}
 let mode = 'customer';
 let editId = null;
 let attendMap = new Map();   // attend.json の本日出勤 源氏名 → {start,end,shiftTime}
-let viewMode = 'today';      // 表示タブ: 'today' | 'matt' | 'list' | 'all'
+let viewMode = 'today';      // 表示タブ: 'today' | 'matt' | 'all'
 const STORE_KEY = 'royal_reception_v2';
 const SOLD_DATE_KEY = 'royal_reception_sold_date';
 const DELETED_KEY = 'royal_reception_deleted';
-const DAY_KEY = 'royal_reception_day';  // その日だけ有効な状態（手動出勤・自動完売済み）
+const DAY_KEY = 'royal_reception_day';  // その日だけ有効な状態（自動完売済み）
 function loadDay(){
   try{ const v=JSON.parse(localStorage.getItem(DAY_KEY)||'null'); if(v&&v.date===todayJST()) return v; }catch(e){}
-  return {date:todayJST(),manual:{},autoSold:[]};
+  return {date:todayJST(),autoSold:[]};
 }
 function saveDay(){ try{ localStorage.setItem(DAY_KEY,JSON.stringify(day)); }catch(e){} }
 let day;
@@ -384,11 +381,9 @@ function renderTop(){
 
 /* ===== 表示（本日出勤） ===== */
 function onSheet(c){ return attendMap.has(c.name); }   // 利用表で本日出勤
-function isAttending(c){ return onSheet(c) || day.manual[c.id]!==undefined; }
+function isAttending(c){ return onSheet(c); }
 function shiftLabel(c){
-  const i=attendMap.get(c.name);
-  if(i) return i.shiftTime||'';
-  return day.manual[c.id]||'';
+  return attendMap.get(c.name)?.shiftTime||'';
 }
 function timeToMin(t){ const m=/(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):9999; }
 function todayList(){
@@ -399,21 +394,19 @@ function todayList(){
 function viewBarHTML(){
   return `<div class="chBar">
     <button class="chBtn ${viewMode==='today'?'active':''}" onclick="setViewMode('today')">本日出勤</button>
-    <button class="chBtn ${viewMode==='list'?'active':''}" onclick="setViewMode('list')" style="margin-left:8px">一覧</button>
     <button class="chBtn ${viewMode==='matt'?'active':''}" onclick="setViewMode('matt')" style="margin-left:8px">マット</button>
     <button class="chBtn ${viewMode==='all'?'active':''}" onclick="setViewMode('all')" style="margin-left:8px">表示</button>
     <button id="chSyncBtn" class="chBtn" onclick="refreshAttendance(true)" style="margin-left:8px">更新</button>
   </div>`;
 }
-function setViewMode(m){ viewMode=m; listSel=new Set(); renderCustomer(); }
+function setViewMode(m){ viewMode=m; renderCustomer(); }
 function renderCustomer(){
   if(viewMode==='matt'){ renderMattList(); return; }
-  if(viewMode==='list'){ renderCastList(); return; }
   if(viewMode==='all'){ renderAllCasts(); return; }
   const list=todayList();
   let html=viewBarHTML();
   if(list.length===0){
-    html+='<div class="empty" style="padding:24px 18px;">本日出勤のキャストはいません。「一覧」から追加できます。</div>';
+    html+='<div class="empty" style="padding:24px 18px;">本日出勤のキャストはいません。</div>';
   }else{
     html+='<div class="grid">';
     for(const c of list) html+=todayCardHTML(c);
@@ -649,7 +642,7 @@ function checkNewDay(){
     for(const c of casts) c.sold=false;
     localStorage.setItem(SOLD_DATE_KEY,t); save();
   }
-  if(day.date!==t){ day={date:t,manual:{},autoSold:[]}; saveDay(); }
+  if(day.date!==t){ day={date:t,autoSold:[]}; saveDay(); }
 }
 // 退勤時間を過ぎたキャストを完売にする（各キャスト1日1回だけ。手動で戻した完売は上書きしない）
 function applyAutoSold(){
@@ -716,45 +709,6 @@ async function refreshAttendance(manual){
     if(manual) alert('出勤データの取得に失敗しました。\nネットワーク接続を確認してください。');
   }
   if(mode==='customer'||mode==='inbound') render();
-}
-
-/* ===== 一覧（選択して本日出勤に追加） ===== */
-let listSel=new Set();
-function renderCastList(){
-  const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
-  let html=viewBarHTML();
-  html+='<div class="pickWrap"><div class="pickGrid">';
-  for(const c of list) html+=listCardHTML(c);
-  html+='</div></div>';
-  const n=listSel.size;
-  html+=`<div class="doneBar"><span class="cnt">選択中 <b>${n}</b> 名</span>
-    <button class="done" ${n===0?'disabled':''} onclick="addToToday()">追加</button></div>`;
-  const main=document.getElementById('main'), top=main.scrollTop;
-  main.innerHTML=html; main.scrollTop=top;
-}
-function listCardHTML(c){
-  const inner=c.photo
-    ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
-    :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  const site=onSheet(c);                            // 利用表で出勤中
-  const added=!site&&day.manual[c.id]!==undefined;  // 手動で追加済み（タップで取り消し）
-  const sel=listSel.has(c.id);
-  const tag=site?'<div class="siteTag">出勤中</div>':added?'<div class="doneTag">済</div>':'<div class="check">✓</div>';
-  return `<div class="pcard ${sel?'selected':''} ${added?'added':''} ${site?'site':''}" onclick='toggleListSel(${JSON.stringify(c.id)})'>
-    ${inner}<div class="scrim"></div>${tag}<div class="pname">${esc(c.name)}</div></div>`;
-}
-function toggleListSel(id){
-  const c=find(id); if(!c) return;
-  if(onSheet(c)) return;
-  checkNewDay();
-  if(day.manual[id]!==undefined){ delete day.manual[id]; saveDay(); }
-  else if(listSel.has(id)) listSel.delete(id); else listSel.add(id);
-  renderCastList();
-}
-function addToToday(){
-  checkNewDay();
-  for(const id of listSel) if(find(id)) day.manual[id]='';
-  saveDay(); setViewMode('today');
 }
 
 /* ===== 設定（あいうえお順・6列） ===== */
