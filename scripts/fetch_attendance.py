@@ -11,6 +11,7 @@
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -34,12 +35,31 @@ def load_config():
     return url, pw
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+def http_get(url):
+    """GET する。Apps Script は googleusercontent へ 302 で転送するので、
+    転送先は新しいリクエストとして取り直す（自動追従だと 404 になることがある）"""
+    opener = urllib.request.build_opener(_NoRedirect)
+    for _ in range(5):
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 royal-reception'})
+        try:
+            with opener.open(req, timeout=60) as res:
+                return res.read().decode('utf-8')
+        except urllib.error.HTTPError as e:
+            if e.code in (301, 302, 303, 307, 308) and e.headers.get('Location'):
+                url = e.headers['Location']
+                continue
+            raise
+    sys.exit('利用管理への転送が多すぎます')
+
+
 def fetch_state(url, pw):
     q = urllib.parse.urlencode({'action': 'get', 'rev': 0, 'pass': pw})
-    req = urllib.request.Request(url + ('&' if '?' in url else '?') + q,
-                                 headers={'User-Agent': 'royal-reception'})
-    with urllib.request.urlopen(req, timeout=60) as res:
-        body = res.read().decode('utf-8')
+    body = http_get(url + ('&' if '?' in url else '?') + q)
     try:
         j = json.loads(body)
     except ValueError:
