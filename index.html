@@ -51,21 +51,20 @@
   .card .name{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;
     font-size:23px;font-weight:700;letter-spacing:.03em;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 
-  .card .selCheck{position:absolute;top:7px;left:7px;width:26px;height:26px;border-radius:50%;
-    background:var(--gold);color:#fff;font-size:14px;font-weight:900;
-    display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);}
-  .card.sel .selCheck{display:flex;}
-  .card.sel{box-shadow:0 0 0 3px var(--gold),0 4px 14px rgba(58,15,30,.10);}
-  .selBar{position:fixed;bottom:0;left:0;right:0;z-index:40;
-    background:var(--wine);padding:14px 18px 32px;display:none;
-    flex-direction:column;gap:10px;box-shadow:0 -4px 20px rgba(0,0,0,.25);}
-  .selBar.show{display:flex;}
-  .selBar .selInfo{color:rgba(255,255,255,.65);font-size:13px;font-weight:700;}
-  .selBar .selActions{display:flex;gap:10px;}
-  .selBar .selReturn{flex:1;background:var(--gold);color:#fff;border-radius:12px;
-    padding:14px;font-size:16px;font-weight:800;border:none;cursor:pointer;}
-  .selBar .selCancel{background:rgba(255,255,255,.15);color:#fff;border-radius:12px;
-    padding:14px 20px;font-size:14px;font-weight:700;border:none;cursor:pointer;}
+  /* 表示：本日出勤 */
+  .card .ctime{position:absolute;left:0;bottom:0;padding:6px 9px;color:rgba(255,255,255,.75);
+    font-size:11px;font-weight:500;letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .card .soldBtn{top:6px;right:6px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;z-index:2;
+    background:rgba(0,0,0,.18);color:rgba(255,255,255,.55);}
+  .card .soldBtn.active{background:rgba(176,48,80,.55);color:rgba(255,255,255,.8);}
+  .card.sold .photo,.card.sold .ph{filter:grayscale(.7) brightness(.45);}
+  .card .soldMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:30px;font-weight:900;letter-spacing:.2em;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+  .card .manualTag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;
+    font-size:12px;font-weight:800;border-radius:7px;padding:3px 8px;}
+  .pcard.site{opacity:.45;}
+  .siteTag{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;
+    background:rgba(0,0,0,.6);color:#fff;font-size:15px;font-weight:800;border-radius:10px;padding:5px 14px;}
 
   /* スタッフ用：4列の選択グリッド */
   .pickWrap{padding:12px 12px 84px;}
@@ -218,8 +217,7 @@
   <div class="headRight">
   <div class="modeToggle">
     <button id="mTop" onclick="setMode('top')">トップ</button>
-    <button id="mCustomer" class="active" onclick="setMode('customer')">お客様用</button>
-    <button id="mStaff" onclick="setMode('staff')">スタッフ用</button>
+    <button id="mCustomer" class="active" onclick="setMode('customer')">表示</button>
     <button id="mInbound" onclick="setMode('inbound')">インバウンド</button>
     <button id="mSettings" onclick="setMode('settings')">設定</button>
   </div>
@@ -228,14 +226,6 @@
 </header>
 
 <main id="main"></main>
-<div class="selBar" id="selBar">
-  <div class="selInfo"></div>
-  <div class="selActions">
-    <button class="selCancel" onclick="cancelSel()">キャンセル</button>
-    <button class="selReturn" onclick="returnSelected()">戻す</button>
-  </div>
-</div>
-
 <div id="syncToast"></div>
 <div class="viewer" id="viewer"
   onpointerdown="viewerPD(event)" onpointerup="viewerPU(event)" onpointercancel="vs=null">
@@ -302,13 +292,19 @@
 let casts = [];          // {id,name,photo,gid,sold,shown}
 let mode = 'customer';
 let editId = null;
-let draft = new Set();
-let chGirlidSet = new Set();
+let attendSet = new Set();   // attend.json の本日出勤 girlid
 let attendInfo = {};
-let suppressClick = false;
+let viewMode = 'today';      // 表示タブ: 'today' | 'matt' | 'list'
 const STORE_KEY = 'royal_reception_v2';
 const SOLD_DATE_KEY = 'royal_reception_sold_date';
 const DELETED_KEY = 'royal_reception_deleted';
+const DAY_KEY = 'royal_reception_day';  // その日だけ有効な状態（手動出勤・自動完売済み）
+function loadDay(){
+  try{ const v=JSON.parse(localStorage.getItem(DAY_KEY)||'null'); if(v&&v.date===todayJST()) return v; }catch(e){}
+  return {date:todayJST(),manual:{},autoSold:[]};
+}
+function saveDay(){ try{ localStorage.setItem(DAY_KEY,JSON.stringify(day)); }catch(e){} }
+let day;
 function getDeletedIds(){ try{ return new Set(JSON.parse(localStorage.getItem(DELETED_KEY)||'[]')); }catch(e){ return new Set(); } }
 function addDeletedId(id){ const s=getDeletedIds(); s.add(id); localStorage.setItem(DELETED_KEY,JSON.stringify([...s])); }
 const PHOTO_BASE = 'https://royallips.github.io/royal-reception/img/';
@@ -321,6 +317,7 @@ const SAMPLE = [
 ].map(([gid,name])=>({id:'c'+gid,name,photo:'',photos:[''],photoIdx:0,gid,sold:false,shown:false}));
 
 function todayJST(){ const d=new Date(Date.now()+9*3600000); return d.toISOString().slice(0,10); }
+day=loadDay();
 function load(){
   try{
     const v=localStorage.getItem(STORE_KEY);
@@ -346,9 +343,14 @@ async function syncFromRemote(){
     if(!res.ok) return;
     const remote=await res.json();
     if(!Array.isArray(remote)||remote.length===0) return;
+    // 初回起動時のサンプル（id='c'+gid）が本データと重複していたら取り除く
+    const remoteIds=new Set(remote.map(rc=>rc.id));
+    const remoteGids=new Set(remote.map(rc=>rc.gid).filter(Boolean));
+    const before=casts.length;
+    casts=casts.filter(c=>!(c.id==='c'+c.gid&&remoteGids.has(c.gid)&&!remoteIds.has(c.id)));
     const localMap=new Map(casts.map(c=>[c.id,c]));
     const deletedIds=getDeletedIds();
-    let changed=false;
+    let changed=casts.length!==before;
     for(const rc of remote){
       if(deletedIds.has(rc.id)) continue;
       if(!rc.photos) rc.photos=[rc.photo||''];
@@ -376,12 +378,10 @@ function render(){
   document.getElementById('mTop').classList.toggle('active',mode==='top');
   document.getElementById('mCustomer').classList.toggle('active',mode==='customer');
   document.getElementById('mInbound').classList.toggle('active',mode==='inbound');
-  document.getElementById('mStaff').classList.toggle('active',mode==='staff');
   document.getElementById('mSettings').classList.toggle('active',mode==='settings');
   if(mode==='top') renderTop();
   else if(mode==='customer') renderCustomer();
   else if(mode==='inbound') renderInbound();
-  else if(mode==='staff') renderStaff();
   else renderSettings();
 }
 
@@ -395,28 +395,64 @@ function renderTop(){
     </div>`;
 }
 
-/* ===== お客様用（横3列・フリーなし） ===== */
+/* ===== 表示（本日出勤） ===== */
+function isAttending(c){ return (c.gid&&attendSet.has(c.gid)) || day.manual[c.id]!==undefined; }
+function shiftLabel(c){
+  const i=c.gid&&attendSet.has(c.gid)&&attendInfo[c.gid];
+  if(i) return (i.shiftTime||'')+(i.earliest?' 最短'+i.earliest:'');
+  return day.manual[c.id]||'';
+}
+function timeToMin(t){ const m=/(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):9999; }
+function todayList(){
+  const byShift=(a,b)=>timeToMin(shiftLabel(a))-timeToMin(shiftLabel(b))||(a.name||'').localeCompare((b.name||''),'ja');
+  const base=casts.filter(isAttending);
+  return [...base.filter(c=>!c.sold).sort(byShift),...base.filter(c=>c.sold).sort(byShift)];
+}
+function viewBarHTML(){
+  return `<div class="chBar">
+    <button class="chBtn ${viewMode==='today'?'active':''}" onclick="setViewMode('today')">本日出勤</button>
+    <button class="chBtn ${viewMode==='list'?'active':''}" onclick="setViewMode('list')" style="margin-left:8px">一覧</button>
+    <button class="chBtn ${viewMode==='matt'?'active':''}" onclick="setViewMode('matt')" style="margin-left:8px">マット</button>
+    <button id="chSyncBtn" class="chBtn" onclick="refreshAttendance(true)" style="margin-left:8px">更新</button>
+  </div>`;
+}
+function setViewMode(m){ viewMode=m; listSel=new Set(); renderCustomer(); }
 function renderCustomer(){
-  cancelSel();
-  const list=casts.filter(c=>c.shown)
-    .sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
-  let html=`<div class="custBar">
-      <button class="resetBtn" onclick="resetCustomer()">リセット</button>
-      <button class="resetBtn" onclick="openSelMode()">戻す</button>
-    </div>`;
-  html+='<div class="grid">';
-  for(const c of list) html+=custCardHTML(c);
-  html+='</div>';
+  if(viewMode==='matt'){ renderMattList(); return; }
+  if(viewMode==='list'){ renderCastList(); return; }
+  const list=todayList();
+  let html=viewBarHTML();
+  if(list.length===0){
+    html+='<div class="empty" style="padding:24px 18px;">本日出勤のキャストはいません。「一覧」から追加できます。</div>';
+  }else{
+    html+='<div class="grid">';
+    for(const c of list) html+=todayCardHTML(c);
+    html+='</div>';
+  }
   document.getElementById('main').innerHTML=html;
   attachDnd();
 }
-function custCardHTML(c){
+function todayCardHTML(c){
   const inner=c.photo
     ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  const soldOverlay=c.sold?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:18px;font-weight:900;letter-spacing:2px;">完売</span></div>`:'';
-  return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}${soldOverlay}<div class="selCheck">✓</div></div>`;
+  const id=JSON.stringify(c.id);
+  const time=shiftLabel(c);
+  const isManual=!(c.gid&&attendSet.has(c.gid));
+  return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}
+    ${c.sold?'<div class="soldMark">完売</div>':''}
+    ${isManual?'<div class="manualTag">手動</div>':''}
+    ${time||(viewMode==='matt'&&c.mattMemo)?`<div class="ctime">${esc(time)}${viewMode==='matt'&&c.mattMemo?(time?'<br>':'')+esc(c.mattMemo):''}</div>`:''}
+    <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>${c.sold?'完売':'出勤'}</button></div>`;
 }
+function toggleSold(id,e){
+  if(e) e.stopPropagation();
+  const c=find(id); if(!c) return;
+  checkNewDay();
+  c.sold=!c.sold;
+  save(); renderCustomer();
+}
+
 /* ===== インバウンド用 ===== */
 let inbMode='all'; // 'all' | 'today' | 'memo' | 'notice'
 let noticeLang='ja'; // 'ja' | 'en' | 'ko' | 'zh-tw' | 'zh-cn'
@@ -535,7 +571,7 @@ Penetrative sex and anal services are not available at this establishment.`,
 };
 function renderInbound(){
   const base=inbMode==='today'
-    ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
+    ? casts.filter(c=>c.inbound&&isAttending(c))
     : casts.filter(c=>c.inbound&&!c.sold);
   const list=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   let html=`<div class="chBar">
@@ -583,145 +619,113 @@ function showInbPhoto(id){
   const c=find(id); if(!c) return;
   viewerInbound=true; viewerCastId=id;
   const base=inbMode==='today'
-    ? casts.filter(c=>c.inbound&&c.gid&&chGirlidSet.has(c.gid))
+    ? casts.filter(c=>c.inbound&&isAttending(c))
     : casts.filter(c=>c.inbound&&!c.sold);
   viewerList=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
 
-function resetCustomer(){
-  for(const c of casts) c.shown=false;
-  save(); renderCustomer();
-}
-function removeFromCustomer(id){
-  const c=find(id); if(!c) return;
-  c.shown=false; save(); renderCustomer();
-}
-
-/* ===== スタッフ用 ===== */
-function renderStaff(){
-  draft = new Set();
-  paintStaff();
-}
-let staffMode='all'; // 'all' | 'matt'
-function paintStaff(){
-  if(staffMode==='matt'){ renderMattList(); return; }
-  const filtered = chGirlidSet.size > 0;
-  const base = filtered
-    ? casts.filter(c => c.gid && chGirlidSet.has(c.gid))
-    : casts;
-  const toMin=t=>{ if(!t)return 9999; const[h,m]=t.split(':').map(Number); return h*60+m; };
-  const sortFn=filtered
-    ?(a,b)=>toMin(attendInfo[a.gid]?.shiftStart)-toMin(attendInfo[b.gid]?.shiftStart)
-    :(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');
-  const list=[...base.filter(c=>!c.sold).sort(sortFn),...base.filter(c=>c.sold)];
-  let html=`<div class="chBar">
-    <button id="chSyncBtn" class="chBtn ${filtered?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
-    <button class="chBtn ${!filtered?'active':''}" onclick="setStaffMode('all')" style="margin-left:8px">全員表示</button>
-    <button class="chBtn ${staffMode==='matt'?'active':''}" onclick="setStaffMode('matt')" style="margin-left:8px">マット</button>
-  </div>`;
-  html+='<div class="pickWrap"><div class="pickGrid">';
-  for(const c of list) html+=pcardHTML(c);
-  html+='</div></div>';
-  const n=draft.size;
-  html+=`<div class="doneBar"><span class="cnt">選択中 <b>${n}</b> 名</span>
-    <button class="done" ${n===0?'disabled':''} onclick="addSelection()">追加</button></div>`;
-  document.getElementById('main').innerHTML=html;
-}
-function setStaffMode(m){ staffMode=m; draft=new Set(); if(m==='all') chGirlidSet=new Set(); paintStaff(); }
 function renderMattList(){
-  const list=casts.filter(c=>c.matt).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
-  let html=`<div class="chBar">
-    <button id="chSyncBtn" class="chBtn ${chGirlidSet.size>0?'active':''}" onclick="syncCityHeaven()">本日出勤</button>
-    <button class="chBtn" onclick="setStaffMode('all')" style="margin-left:8px">全員表示</button>
-    <button class="chBtn active" onclick="setStaffMode('matt')" style="margin-left:8px">マット</button>
-  </div>`;
-  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;padding:6px 10px;align-content:start;">`;
-  for(const c of list){
-    html+=`<div style="display:flex;flex-direction:column;justify-content:center;padding:7px 10px;border-bottom:1px solid var(--line);">
-      <div style="font-size:14px;font-weight:700;color:var(--ink);">${esc(c.name||'')}</div>
-      <div style="font-size:12px;color:${c.mattMemo?'var(--gray)':'var(--line)'};margin-top:1px;">${c.mattMemo?esc(c.mattMemo):'—'}</div>
-    </div>`;
+  const list=todayList().filter(c=>c.matt);
+  let html=viewBarHTML();
+  if(list.length===0){
+    html+='<div class="empty" style="padding:24px 18px;">本日出勤のマット対応キャストはいません。</div>';
+  }else{
+    html+='<div class="grid">';
+    for(const c of list) html+=todayCardHTML(c);
+    html+='</div>';
   }
-  html+='</div>';
   document.getElementById('main').innerHTML=html;
-}
-function clearChFilter(){
-  chGirlidSet=new Set(); draft=new Set(); staffMode='all'; paintStaff();
-}
-function pcardHTML(c){
-  const inner=c.photo
-    ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
-    :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-  const added=c.shown&&!c.sold;                 // すでにお客様用に出している＝済
-  const sel=draft.has(c.id)&&!c.sold&&!added;   // 今回新たに選択中
-  const id=JSON.stringify(c.id);
-  const tag = added ? '<div class="doneTag">済</div>' : '<div class="check">✓</div>';
-  const inbBadge = c.inbound ? '<div class="inbBadge">INB</div>' : '';
-  return `<div class="pcard ${sel?'selected':''} ${added?'added':''} ${c.sold?'sold':''}" onclick='toggleSel(${id})'>
-    ${inner}<div class="scrim"></div>${tag}${inbBadge}
-    <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>完売</button>
-    <div class="pname">${esc(c.name)}${(()=>{const i=attendInfo[c.gid];return i?`<span class="ptime">${esc(i.shiftTime)}${i.earliest?' 最短'+esc(i.earliest):''}` +`</span>`:'';})()}</div></div>`;
-}
-function toggleSel(id){
-  const c=find(id); if(!c||c.sold) return;
-  if(c.shown){ c.shown=false; save(); paintStaff(); return; }  // 済を解除
-  if(draft.has(id)) draft.delete(id); else draft.add(id);
-  paintStaff();
-}
-function toggleSold(id,e){
-  if(e) e.stopPropagation();
-  const c=find(id); if(!c) return;
-  c.sold=!c.sold;
-  if(c.sold) draft.delete(id);
-  save(); paintStaff();
-}
-function addSelection(){
-  for(const id of draft){ const c=find(id); if(c&&!c.sold) c.shown=true; }  // 既存に追加
-  draft = new Set();      // 追加したら選択を戻す
-  save(); setMode('customer');
+  attachDnd();
 }
 
-async function syncCityHeaven(){
+/* ===== 出勤データ（attend.json） ===== */
+// 日付が変わったら完売・手動出勤をリセット
+function checkNewDay(){
+  const t=todayJST();
+  if(localStorage.getItem(SOLD_DATE_KEY)!==t){
+    for(const c of casts) c.sold=false;
+    localStorage.setItem(SOLD_DATE_KEY,t); save();
+  }
+  if(day.date!==t){ day={date:t,manual:{},autoSold:[]}; saveDay(); }
+}
+// サイト上で完売・出勤終了になったキャストを完売にする（各キャスト1日1回だけ。手動で戻した完売は上書きしない）
+function applyAutoSold(){
+  const nowJST=new Date(Date.now()+9*3600000);
+  const nowMin=nowJST.getUTCHours()*60+nowJST.getUTCMinutes();
+  const done=new Set(day.autoSold);
+  let changed=false;
+  for(const c of casts){
+    if(!c.gid||!attendSet.has(c.gid)||done.has(c.gid)) continue;
+    const info=attendInfo[c.gid]; if(!info) continue;
+    let ended=false;
+    if(info.shiftEnd){
+      const start=timeToMin(info.shiftStart);
+      let end=timeToMin(info.shiftEnd);
+      if(start!==9999&&end<start) end+=1440;   // 日付またぎ
+      ended=nowMin>end;
+    }
+    if(info.soldOut||ended){ c.sold=true; done.add(c.gid); changed=true; }
+  }
+  if(changed){ day.autoSold=[...done]; saveDay(); save(); }
+}
+async function refreshAttendance(manual){
   const btn=document.getElementById('chSyncBtn');
-  if(btn){btn.disabled=true;btn.textContent='取得中...';}
-  await syncFromRemote();
+  if(manual&&btn){ btn.disabled=true; btn.textContent='取得中...'; }
+  checkNewDay();
+  if(manual) await syncFromRemote();
   try{
     const res=await fetch('./attend.json?t='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error();
     const data=await res.json();
-    const girlidList=data.girlidList||[];
-    if(girlidList.length===0){
-      alert('現在出勤中のキャストはいません。');
-      const b=document.getElementById('chSyncBtn');
-      if(b){b.disabled=false;b.textContent='出勤同期';}
-      return;
-    }
+    attendSet=new Set(data.girlidList||[]);
     attendInfo=data.attendInfo||{};
-    chGirlidSet=new Set(girlidList);
-    draft=new Set();
-    // シンク時は全キャストの完売状態をリセット（前日などの古い状態をクリア）
-    for(const c of casts) c.sold=false;
-    const nowJST=new Date(Date.now()+9*3600000);
-    const nowMin=nowJST.getUTCHours()*60+nowJST.getUTCMinutes();
-    for(const c of casts){
-      if(!c.gid) continue;
-      const info=attendInfo[c.gid];
-      if(!info) continue;
-      if(info.soldOut){ c.sold=true; continue; }
-      if(info.shiftEnd){
-        const[h,m]=info.shiftEnd.split(':').map(Number);
-        if(nowMin>h*60+m){ c.sold=true; continue; }
-      }
-    }
-    localStorage.setItem(SOLD_DATE_KEY,todayJST());
-    staffMode='all'; save(); paintStaff();
+    applyAutoSold();
+    if(manual) showSyncToast(`出勤情報を更新しました（${casts.filter(isAttending).length}名）`);
   }catch(e){
-    alert('データの取得に失敗しました。\nネットワーク接続を確認してください。');
-    const b=document.getElementById('chSyncBtn');
-    if(b){b.disabled=false;b.textContent='出勤同期';}
+    if(manual) alert('出勤データの取得に失敗しました。\nネットワーク接続を確認してください。');
   }
+  if(mode==='customer'||mode==='inbound') render();
+}
+
+/* ===== 一覧（選択して本日出勤に追加） ===== */
+let listSel=new Set();
+function renderCastList(){
+  const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  let html=viewBarHTML();
+  html+='<div class="pickWrap"><div class="pickGrid">';
+  for(const c of list) html+=listCardHTML(c);
+  html+='</div></div>';
+  const n=listSel.size;
+  html+=`<div class="doneBar"><span class="cnt">選択中 <b>${n}</b> 名</span>
+    <button class="done" ${n===0?'disabled':''} onclick="addToToday()">追加</button></div>`;
+  const main=document.getElementById('main'), top=main.scrollTop;
+  main.innerHTML=html; main.scrollTop=top;
+}
+function listCardHTML(c){
+  const inner=c.photo
+    ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
+    :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
+  const site=c.gid&&attendSet.has(c.gid);           // サイト上で出勤中
+  const added=!site&&day.manual[c.id]!==undefined;  // 手動で追加済み（タップで取り消し）
+  const sel=listSel.has(c.id);
+  const tag=site?'<div class="siteTag">出勤中</div>':added?'<div class="doneTag">済</div>':'<div class="check">✓</div>';
+  return `<div class="pcard ${sel?'selected':''} ${added?'added':''} ${site?'site':''}" onclick='toggleListSel(${JSON.stringify(c.id)})'>
+    ${inner}<div class="scrim"></div>${tag}<div class="pname">${esc(c.name)}</div></div>`;
+}
+function toggleListSel(id){
+  const c=find(id); if(!c) return;
+  if(c.gid&&attendSet.has(c.gid)) return;
+  checkNewDay();
+  if(day.manual[id]!==undefined){ delete day.manual[id]; saveDay(); }
+  else if(listSel.has(id)) listSel.delete(id); else listSel.add(id);
+  renderCastList();
+}
+function addToToday(){
+  checkNewDay();
+  for(const id of listSel) if(find(id)) day.manual[id]='';
+  saveDay(); setViewMode('today');
 }
 
 /* ===== 設定（あいうえお順・6列） ===== */
@@ -761,7 +765,7 @@ function renderSettings(){
   document.getElementById('main').innerHTML=html;
 }
 
-function setMode(m){ mode=m; closeViewer(); cancelSel(); render(); }
+function setMode(m){ mode=m; closeViewer(); render(); }
 
 /* 写真切り替え */
 function switchPhoto(id, idx){
@@ -954,12 +958,9 @@ async function pushCastsToGitHub(){
 let viewerCastId=null, viewerList=[], vs=null, previewMode=false, viewerInbound=false;
 const photo2Cache={};
 function showPhoto(id){
-  if(suppressClick){ suppressClick=false; return; }
-  const c=find(id); if(!c)return;
+  const c=find(id); if(!c||c.sold)return;
   viewerCastId=id;
-  viewerList=mode==='customer'
-    ? casts.filter(c=>c.shown&&!c.sold).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'))
-    : [];
+  viewerList=mode==='customer' ? todayList().filter(c=>!c.sold&&(viewMode!=='matt'||c.matt)) : [];
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
@@ -1041,16 +1042,16 @@ function switchViewerPhoto(idx){
 }
 function closeViewer(e){ if(e)e.stopPropagation(); previewMode=false; viewerInbound=false; document.getElementById('viewer').classList.remove('show'); }
 
-/* ===== タップ選択モード ===== */
+/* ===== カードのタップ ===== */
 let g=null;
 const MOVE_CANCEL=20;
-let selMode=false, selSet=new Set();
 
 function attachDnd(){
   document.querySelectorAll('.card[data-id]').forEach(card=>{
     const id=card.getAttribute('data-id');
     card.addEventListener('pointerdown', e=>{
       if(e.pointerType==='mouse' && e.button!==0) return;
+      if(e.target.closest('button')) return;
       gestureStart(e, id);
     }, {passive:true});
   });
@@ -1067,42 +1068,11 @@ function gestureEnd(e){
   const moved=Math.hypot(e.clientX-g.x0, e.clientY-g.y0)>10;
   const id=g.id; g=null;
   if(moved) return;
-  if(selMode){ custToggleSel(id); } else { showPhoto(id); }
+  showPhoto(id);
 }
 document.addEventListener('pointermove', gestureMove, {passive:false});
 document.addEventListener('pointerup', gestureEnd);
 document.addEventListener('pointercancel', e=>{ if(g && e.pointerId===g.pid) g=null; });
-
-function openSelMode(){
-  selMode=true; selSet=new Set(); updateSelUI();
-}
-function enterSelMode(id){
-  selMode=true; selSet=new Set([id]); updateSelUI();
-}
-function custToggleSel(id){
-  if(selSet.has(id)) selSet.delete(id); else selSet.add(id);
-  if(selSet.size===0){ cancelSel(); return; }
-  updateSelUI();
-}
-function cancelSel(){
-  selMode=false; selSet.clear();
-  document.querySelectorAll('.card.sel').forEach(el=>el.classList.remove('sel'));
-  const bar=document.getElementById('selBar'); if(bar) bar.classList.remove('show');
-}
-function updateSelUI(){
-  document.querySelectorAll('.card[data-id]').forEach(el=>{
-    el.classList.toggle('sel', selSet.has(el.dataset.id));
-  });
-  const bar=document.getElementById('selBar');
-  bar.querySelector('.selInfo').textContent=`${selSet.size}件選択中`;
-  bar.classList.add('show');
-}
-function returnSelected(){
-  for(const id of selSet){ const c=find(id); if(c) c.shown=false; }
-  save(); selMode=false; selSet.clear();
-  document.getElementById('selBar').classList.remove('show');
-  renderCustomer();
-}
 
 /* ===== ロック画面 ===== */
 const AUTH_KEY='rr_auth_v2';
@@ -1200,7 +1170,8 @@ function updateFsBtn(){
 document.addEventListener('fullscreenchange',updateFsBtn);
 document.addEventListener('webkitfullscreenchange',updateFsBtn);
 
-load(); syncPassFromRemote(); initLock().then(()=>{ render(); syncFromRemote(); if(chGirlidSet.size) paintStaff(); });
+load(); syncPassFromRemote(); initLock().then(()=>{ render(); syncFromRemote(); refreshAttendance(false); });
+setInterval(()=>refreshAttendance(false),5*60*1000);
 </script>
 </body>
 </html>
