@@ -444,6 +444,7 @@ const NOTICE_LANGS=[
   {key:'zh-tw', label:'繁體'},
   {key:'zh-cn', label:'简体'},
 ];
+const NOTICE_RED_FROM={ja:'基本的なサービスは次の通りです。',en:'Basic services include:',ko:'기본 서비스는 다음과 같습니다.','zh-tw':'基本服務內容如下：','zh-cn':'基本服务内容如下：'};
 const NOTICE_TEXT={
   ja:`料金
 50分   ¥30,000
@@ -565,7 +566,10 @@ function renderInbound(){
     html+=`<div style="display:flex;gap:8px;padding:10px 14px 0;">
       ${NOTICE_LANGS.map(l=>`<button class="chBtn ${noticeLang===l.key?'active':''}" onclick="setNoticeLang('${l.key}')">${l.label}</button>`).join('')}
     </div>`;
-    html+=`<div style="padding:20px 20px;font-size:15px;line-height:2;white-space:pre-wrap;color:var(--ink);">${esc(NOTICE_TEXT[noticeLang]||'')}</div>`;
+    // 「基本的なサービス」以降は赤文字
+    const text=NOTICE_TEXT[noticeLang]||'', from=text.indexOf(NOTICE_RED_FROM[noticeLang]||'\u0000');
+    const body=from<0?esc(text):esc(text.slice(0,from))+`<span style="color:var(--danger);">${esc(text.slice(from))}</span>`;
+    html+=`<div style="padding:20px 20px;font-size:15px;line-height:2;white-space:pre-wrap;color:var(--ink);">${body}</div>`;
     document.getElementById('main').innerHTML=html;
     return;
   }
