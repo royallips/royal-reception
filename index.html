@@ -54,7 +54,7 @@
   /* トップ：スライドショー（クロスディゾルブ） */
   .topShow{position:relative;width:100%;height:100%;overflow:hidden;background:#000;}
   .topImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-    opacity:0;transition:opacity 1.5s ease;}
+    opacity:0;transition:opacity 3s ease-in-out;}
   .topImg.show{opacity:1;}
 
   /* 表示：本日出勤 */
@@ -377,8 +377,8 @@ function render(){
 }
 
 /* ===== トップ ===== */
-// top.jpg, top2.jpg, top3.jpg … を連番で探し、6秒ごとにクロスディゾルブで切り替える
-const TOP_HOLD_MS=6000;
+// top.jpg, top2.jpg, top3.jpg … を連番で探し、10秒ごとに3秒かけてクロスディゾルブで切り替える
+const TOP_HOLD_MS=10000;
 let topTimer=null, topImgs=null;
 function stopTopSlides(){ clearInterval(topTimer); topTimer=null; }
 async function loadTopImages(){
