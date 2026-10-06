@@ -51,6 +51,12 @@
   .card .name{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;
     font-size:23px;font-weight:700;letter-spacing:.03em;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 
+  /* トップ：スライドショー（クロスディゾルブ） */
+  .topShow{position:relative;width:100%;height:100%;overflow:hidden;background:#000;}
+  .topImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+    opacity:0;transition:opacity 1.5s ease;}
+  .topImg.show{opacity:1;}
+
   /* 表示：本日出勤 */
   .card .cname{position:absolute;left:0;right:0;bottom:0;padding:6px 12px 8px;color:#fff;
     font-size:18px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5);
@@ -359,6 +365,7 @@ function find(id){ return casts.find(c=>c.id===id); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 function render(){
+  stopTopSlides();
   document.getElementById('mTop').classList.toggle('active',mode==='top');
   document.getElementById('mCustomer').classList.toggle('active',mode==='customer');
   document.getElementById('mInbound').classList.toggle('active',mode==='inbound');
@@ -370,13 +377,35 @@ function render(){
 }
 
 /* ===== トップ ===== */
+// top.jpg, top2.jpg, top3.jpg … を連番で探し、6秒ごとにクロスディゾルブで切り替える
+const TOP_HOLD_MS=6000;
+let topTimer=null, topImgs=null;
+function stopTopSlides(){ clearInterval(topTimer); topTimer=null; }
+async function loadTopImages(){
+  if(topImgs) return topImgs;
+  const list=[PHOTO_BASE+'top.jpg'];
+  for(let i=2;i<=30;i++){
+    const u=PHOTO_BASE+'top'+i+'.jpg';
+    if(!await new Promise(r=>probePhoto(u,r))) break;   // 番号が途切れたらそこまで
+    list.push(u);
+  }
+  return topImgs=list;
+}
 function renderTop(){
   document.getElementById('main').innerHTML=
-    `<div style="width:100%;height:100%;overflow:hidden;background:#000;">
-      <img src="${PHOTO_BASE}top.jpg" alt="ROYAL LIPS VIP"
-        style="width:100%;height:100%;object-fit:cover;display:block;"
-        onerror="this.style.display='none'">
-    </div>`;
+    `<div class="topShow"><img class="topImg show" src="${PHOTO_BASE}top.jpg" alt="ROYAL LIPS VIP"
+      onerror="this.style.display='none'"></div>`;
+  loadTopImages().then(list=>{
+    const box=document.querySelector('.topShow');
+    if(mode!=='top'||!box||list.length<2||topTimer) return;
+    for(const u of list.slice(1)) box.insertAdjacentHTML('beforeend',`<img class="topImg" src="${esc(u)}" alt="">`);
+    let i=0;
+    topTimer=setInterval(()=>{
+      if(!box.isConnected){ stopTopSlides(); return; }
+      const imgs=box.querySelectorAll('.topImg');
+      imgs[i].classList.remove('show'); i=(i+1)%imgs.length; imgs[i].classList.add('show');
+    },TOP_HOLD_MS);
+  });
 }
 
 /* ===== 表示（本日出勤） ===== */
@@ -1171,7 +1200,7 @@ function scheduleDailyRefresh(){
   let next=Math.floor(nowJST/86400000)*86400000+7*3600000;   // 今日の7:00（JST）
   if(next<=nowJST) next+=86400000;
   setTimeout(async()=>{
-    checkNewDay(); await syncFromRemote(); await refreshAttendance(false);
+    checkNewDay(); topImgs=null; await syncFromRemote(); await refreshAttendance(false);
     scheduleDailyRefresh();
   },next-nowJST);
 }
