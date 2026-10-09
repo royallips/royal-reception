@@ -225,7 +225,7 @@
     <button id="mTop" onclick="setMode('top')">トップ</button>
     <button id="mCustomer" class="active" onclick="setMode('customer')">表示</button>
     <button id="mInbound" onclick="setMode('inbound')">インバウンド</button>
-    <button id="mSettings" onclick="setMode('settings')">設定</button>
+    <button id="mSettings" onclick="setMode('settings')">一覧</button>
   </div>
   <button class="fsBtn" id="fsBtn" onclick="toggleFullscreen()" title="全画面表示">⛶</button>
   </div>
@@ -440,7 +440,20 @@ function onSheet(c){ return attendMap.has(c.name); }   // 利用表で本日出�
 let inboundMap=null;   // 源氏名 → 条件
 // 利用表アプリで「非表示」にしたキャストは、受付画面のどのパネルにも出さない
 let hiddenSet=new Set();
-function shown(c){ return !hiddenSet.has(c.name); }
+// 名簿・マット対応も利用表アプリで管理（取得できない間は casts.json の値）
+let rosterSet=null, mattSet=null;
+function inRoster(c){ return !rosterSet||rosterSet.has(c.name); }
+function shown(c){ return !hiddenSet.has(c.name)&&inRoster(c); }
+function isMatt(c){ return mattSet?mattSet.has(c.name):!!c.matt; }
+// 利用表の名簿にいる全キャスト（受付画面に未登録の子は写真だけの仮キャスト）
+function rosterCasts(){
+  const byName=(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');
+  if(!rosterSet) return [...casts].sort(byName);
+  const seen=new Set(), list=[];
+  for(const c of casts) if(rosterSet.has(c.name)&&!seen.has(c.name)){ seen.add(c.name); list.push(c); }
+  for(const n of rosterSet) if(!seen.has(n)){ seen.add(n); list.push(extraCast(n)); }
+  return list.sort(byName);
+}
 function isInbound(c){ return inboundMap?inboundMap.has(c.name):!!c.inbound; }
 function inbMemoOf(c){ return inboundMap?(inboundMap.get(c.name)||''):(c.inbMemo||''); }
 function inboundCasts(todayOnly){
@@ -694,7 +707,11 @@ function showInbPhoto(id){
   document.getElementById('viewer').classList.add('show');
 }
 
-function allCasts(){ return [...casts,...sheetOnlyCasts()].filter(shown).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja')); }
+function allCasts(){
+  const seen=new Set();
+  return [...rosterCasts(),...sheetOnlyCasts()].filter(c=>!seen.has(c.name)&&seen.add(c.name)).filter(shown)
+    .sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+}
 function renderAllCasts(){
   let html=viewBarHTML()+'<div class="grid">';
   for(const c of allCasts()){
@@ -708,7 +725,7 @@ function renderAllCasts(){
   attachDnd();
 }
 function renderMattList(){
-  const list=todayList().filter(c=>c.matt);
+  const list=todayList().filter(isMatt);
   let html=viewBarHTML();
   if(list.length===0){
     html+='<div class="empty" style="padding:24px 18px;">本日利用のマット対応キャストはいません。</div>';
@@ -785,7 +802,9 @@ async function fetchSheetAttendance(){
   const inbound=cs.some(c=>c.inbound!==undefined)
     ?Object.fromEntries(cs.filter(c=>c.inbound).map(c=>[(c.name||'').trim(),c.inbMemo||''])):null;
   const hidden=cs.filter(c=>c.hidePanel).map(c=>(c.name||'').trim());
-  return {date:today,list,inbound,hidden};
+  const roster=cs.map(c=>(c.name||'').trim()).filter(Boolean);
+  const matt=cs.filter(c=>c.mat).map(c=>(c.name||'').trim());
+  return {date:today,list,inbound,hidden,roster,matt};
 }
 async function refreshAttendance(manual){
   const btn=document.getElementById('chSyncBtn');
@@ -808,6 +827,8 @@ async function refreshAttendance(manual){
     attendMap=new Map(isToday?(data.list||[]).map(x=>[x.name,x]):[]);
     if(data.inbound) inboundMap=new Map(Object.entries(data.inbound));
     if(data.hidden) hiddenSet=new Set(data.hidden);
+    if(data.roster&&data.roster.length) rosterSet=new Set(data.roster);
+    if(data.matt) mattSet=new Set(data.matt);
     applyAutoSold();
     if(manual){
       const n=casts.filter(isAttending).length;
@@ -832,34 +853,24 @@ function saveSheetConf(){
   if(url&&pass) refreshAttendance(true);
 }
 function renderSettings(){
-  const list=[...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  // キャストの追加・編集は利用表アプリで行うので、ここは見るだけの一覧
+  const list=rosterCasts();
   let html='<div class="setWrap">'
-    +`<div class="setHead"><h2>キャスト登録 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2>`
-    +'<button class="btn" onclick="openAdd()">＋ キャスト追加</button></div>'
-    +'<div class="setSubHead">'
-    +'<button class="btn ghost sm" onclick="pushCastsToGitHub()">☁ クラウドに保存</button>'
-    +'</div>'
-    ;
+    +`<div class="setHead"><h2>キャスト一覧 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2></div>`
+    +'<p style="margin:0 0 12px;font-size:12px;color:var(--gray);">キャストの追加・編集・写真は利用表アプリのキャスト管理で行います。</p>';
   if(list.length===0){
-    html+='<div class="empty">まだ登録がありません。「＋ キャスト追加」から始めてください。</div>';
+    html+='<div class="empty">キャストがいません。</div>';
   }else{
     html+='<div class="setGrid">';
     for(const c of list){
       const inner=c.photo
         ?`<img src="${esc(c.photo)}" alt="" ${imgErr()}>`
         :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-      const photos=c.photos||[c.photo||''];
-      const validCnt=photos.filter(Boolean).length;
-      let switcher='';
-      if(validCnt>1){
-        const idx=c.photoIdx||0;
-        switcher='<div class="photoSwitch" onclick="event.stopPropagation()">';
-        photos.forEach((p,i)=>{ if(p) switcher+=`<button class="${idx===i?'active':''}" onclick="switchPhoto(${JSON.stringify(c.id)},${i})">${i+1}</button>`; });
-        switcher+='</div>';
-      }
-      html+=`<div class="scard" onclick='openEdit(${JSON.stringify(c.id)})'>
-        <div class="sthumb">${inner}</div>
-        <div class="sname">${esc(c.name)}</div>${switcher}</div>`;
+      const tags=[hiddenSet.has(c.name)?'非表示':'',isInbound(c)?'インバウンド':'',isMatt(c)?'マット':''].filter(Boolean);
+      html+=`<div class="scard" onclick='showPhoto(${JSON.stringify(c.id)})'>
+        <div class="sthumb">${inner}${hiddenSet.has(c.name)?'<div class="soldtag" style="background:var(--gray)">非表示</div>':''}</div>
+        <div class="sname">${esc(c.name)}</div>
+        <div style="font-size:10px;color:var(--gray);text-align:center;min-height:13px;">${esc(tags.filter(t=>t!=='非表示').join('・'))}</div></div>`;
     }
     html+='</div>';
   }
@@ -1055,9 +1066,10 @@ let viewerCastId=null, viewerList=[], vs=null, previewMode=false, viewerInbound=
 function showPhoto(id){
   const c=find(id); if(!c)return;
   viewerCastId=id;
-  viewerList=mode!=='customer' ? []
+  viewerList=mode==='settings' ? rosterCasts()
+    : mode!=='customer' ? []
     : viewMode==='all' ? allCasts()
-    : todayList().filter(c=>viewMode!=='matt'||c.matt);
+    : todayList().filter(c=>viewMode!=='matt'||isMatt(c));
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }

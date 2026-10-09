@@ -123,6 +123,9 @@ def main():
     out = {'date': today, 'list': rows}
     # 利用表アプリで「非表示」にしたキャスト（受付画面のパネルに出さない）
     out['hidden'] = [c.get('name', '').strip() for c in casts if c.get('hidePanel')]
+    # 名簿とマット対応（受付画面の一覧・マット対応タブに使う）
+    out['roster'] = [c.get('name', '').strip() for c in casts if c.get('name', '').strip()]
+    out['matt'] = [c.get('name', '').strip() for c in casts if c.get('mat')]
     if any('inbound' in c for c in casts):
         out['inbound'] = {c.get('name', '').strip(): c.get('inbMemo', '') or ''
                           for c in casts if c.get('inbound')}
