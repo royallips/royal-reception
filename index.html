@@ -866,11 +866,9 @@ function renderSettings(){
       const inner=c.photo
         ?`<img src="${esc(c.photo)}" alt="" ${imgErr()}>`
         :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-      const tags=[hiddenSet.has(c.name)?'非表示':'',isInbound(c)?'インバウンド':'',isMatt(c)?'マット':''].filter(Boolean);
       html+=`<div class="scard" onclick='showPhoto(${JSON.stringify(c.id)})'>
         <div class="sthumb">${inner}${hiddenSet.has(c.name)?'<div class="soldtag" style="background:var(--gray)">非表示</div>':''}</div>
-        <div class="sname">${esc(c.name)}</div>
-        <div style="font-size:10px;color:var(--gray);text-align:center;min-height:13px;">${esc(tags.filter(t=>t!=='非表示').join('・'))}</div></div>`;
+        <div class="sname">${esc(c.name)}</div></div>`;
     }
     html+='</div>';
   }
