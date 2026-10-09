@@ -308,6 +308,13 @@ function addDeletedId(id){ const s=getDeletedIds(); s.add(id); localStorage.setI
 const PHOTO_BASE = './img/';   // ページと同じ場所の img フォルダ（ローカル確認でも新しい写真が出る）
 // 写真は img/源氏名.jpg（2枚目 源氏名2、3枚目 源氏名3、インバウンド 源氏名A1 / 源氏名A2）
 function photoUrl(name,suffix){ return name?PHOTO_BASE+encodeURIComponent(name.normalize('NFC'))+(suffix||'')+'.jpg':''; }
+// 写真がないキャストは「COMING SOON」画像（img/noimage.jpg）を表示。next があれば先にそちらを試す
+const NO_PHOTO=PHOTO_BASE+'noimage.jpg';
+function imgErr(next){
+  return next
+    ?`onerror="if(this.dataset.f){this.onerror=null;this.src='${NO_PHOTO}'}else{this.dataset.f=1;this.src='${esc(next)}'}"`
+    :`onerror="this.onerror=null;this.src='${NO_PHOTO}'"`;
+}
 function fixPhoto(c){ c.photo=photoUrl(c.name); c.photos=[c.photo]; c.photoIdx=0; delete c.gid; }
 
 
@@ -494,7 +501,7 @@ function renderCustomer(){
 }
 function todayCardHTML(c){
   const inner=c.photo
-    ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
+    ?`<img class="photo" src="${esc(c.photo)}" alt="" ${imgErr()}>`
     :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
   const id=JSON.stringify(c.id);
   const time=shiftLabel(c);
@@ -670,9 +677,8 @@ function setInbMode(m){ inbMode=m; renderInbound(); }
 function setNoticeLang(lang){ noticeLang=lang; renderInbound(); }
 function inbCardHTML(c){
   const inbSrc=photoUrl(c.name,'A1');
-  const fallback=esc(c.photo||'');
   const inner=inbSrc
-    ?`<img class="photo" src="${esc(inbSrc)}" alt="" onerror="this.src='${fallback}'">`
+    ?`<img class="photo" src="${esc(inbSrc)}" alt="" ${imgErr(c.photo)}>`
     :(c.photo?`<img class="photo" src="${esc(c.photo)}" alt="">`
       :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`);
   return `<div class="card" onclick="showInbPhoto('${esc(c.id)}')">${inner}</div>`;
@@ -690,7 +696,7 @@ function renderAllCasts(){
   let html=viewBarHTML()+'<div class="grid">';
   for(const c of allCasts()){
     const inner=c.photo
-      ?`<img class="photo" src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
+      ?`<img class="photo" src="${esc(c.photo)}" alt="" ${imgErr()}>`
       :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
     html+=`<div class="card" data-id="${esc(c.id)}">${inner}<div class="scrim"></div><div class="cname">${esc(c.name)}</div></div>`;
   }
@@ -835,7 +841,7 @@ function renderSettings(){
     html+='<div class="setGrid">';
     for(const c of list){
       const inner=c.photo
-        ?`<img src="${esc(c.photo)}" alt="" onerror="this.style.display='none'">`
+        ?`<img src="${esc(c.photo)}" alt="" ${imgErr()}>`
         :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
       const photos=c.photos||[c.photo||''];
       const validCnt=photos.filter(Boolean).length;
@@ -1088,7 +1094,7 @@ function renderViewerPhoto(c,idx){
     : [c.photo||'',photoUrl(c.name,'2'),photoUrl(c.name,'3')];
   const url=urls[idx]||urls[0];
   const onerr=idx>0?'onerror="switchViewerPhoto(0)"'
-    :viewerInbound?`onerror="this.src='${esc(c.photo||'')}';this.onerror=null"`:'';
+    :viewerInbound?imgErr(c.photo):imgErr();
   const tok=++viewerTok, avail=[true];
   const draw=()=>{
     if(tok!==viewerTok||avail.filter(Boolean).length<2) return;
