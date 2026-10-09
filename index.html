@@ -300,7 +300,7 @@ const DELETED_KEY = 'royal_reception_deleted';
 const DAY_KEY = 'royal_reception_day';  // その日だけ有効な状態（自動完売済み）
 function loadDay(){
   try{ const v=JSON.parse(localStorage.getItem(DAY_KEY)||'null'); if(v&&v.date===todayJST()) return v; }catch(e){}
-  return {date:todayJST(),autoSold:[]};
+  return {date:todayJST(),autoSold:[],extraSold:[]};
 }
 function saveDay(){ try{ localStorage.setItem(DAY_KEY,JSON.stringify(day)); }catch(e){} }
 let day;
@@ -361,7 +361,7 @@ async function syncFromRemote(){
 
 function tint(name){ let h=0; for(const ch of (name||'?')) h=(h*31+ch.charCodeAt(0))%360;
   return `linear-gradient(150deg,hsl(${h} 42% 46%),hsl(${(h+28)%360} 46% 34%))`; }
-function find(id){ return casts.find(c=>c.id===id); }
+function find(id){ return casts.find(c=>c.id===id)||[...extraCasts.values()].find(c=>c.id===id); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 function render(){
@@ -411,13 +411,28 @@ function renderTop(){
 /* ===== 表示（本日出勤） ===== */
 function onSheet(c){ return attendMap.has(c.name); }   // 利用表で本日出勤
 function isAttending(c){ return onSheet(c); }
+// 利用表で本日利用なのに設定タブに未登録のキャストも、写真（img/源氏名.jpg）で自動表示する。
+// 完売状態はその日だけ day.extraSold に保存する
+const extraCasts=new Map();   // 源氏名 → 仮のキャスト
+function sheetOnlyCasts(){
+  const registered=new Set(casts.map(c=>c.name));
+  const list=[];
+  for(const name of attendMap.keys()){
+    if(registered.has(name)) continue;
+    let c=extraCasts.get(name);
+    if(!c){ c={id:'sheet:'+name,name,photo:photoUrl(name),photos:[photoUrl(name)],photoIdx:0,extra:true}; extraCasts.set(name,c); }
+    c.sold=(day.extraSold||[]).includes(name);
+    list.push(c);
+  }
+  return list;
+}
 function shiftLabel(c){
   return attendMap.get(c.name)?.shiftTime||'';
 }
 function timeToMin(t){ const m=/(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):9999; }
 function todayList(){
   const byName=(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');   // あいうえお順（完売は下）
-  const base=casts.filter(isAttending);
+  const base=[...casts.filter(isAttending),...sheetOnlyCasts()];
   return [...base.filter(c=>!c.sold).sort(byName),...base.filter(c=>c.sold).sort(byName)];
 }
 function viewBarHTML(){
@@ -460,7 +475,8 @@ function toggleSold(id,e){
   const c=find(id); if(!c) return;
   checkNewDay();
   c.sold=!c.sold;
-  save(); renderCustomer();
+  if(c.extra){ setExtraSold(c.name,c.sold); } else save();
+  renderCustomer();
 }
 
 /* ===== インバウンド用 ===== */
@@ -642,7 +658,7 @@ function showInbPhoto(id){
   document.getElementById('viewer').classList.add('show');
 }
 
-function allCasts(){ return [...casts].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja')); }
+function allCasts(){ return [...casts,...sheetOnlyCasts()].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja')); }
 function renderAllCasts(){
   let html=viewBarHTML()+'<div class="grid">';
   for(const c of allCasts()){
@@ -671,13 +687,18 @@ function renderMattList(){
 
 /* ===== 出勤データ（attend.json） ===== */
 // 日付が変わったら完売・手動出勤をリセット
+function setExtraSold(name,sold){
+  const set=new Set(day.extraSold||[]);
+  if(sold) set.add(name); else set.delete(name);
+  day.extraSold=[...set]; saveDay();
+}
 function checkNewDay(){
   const t=todayJST();
   if(localStorage.getItem(SOLD_DATE_KEY)!==t){
     for(const c of casts) c.sold=false;
     localStorage.setItem(SOLD_DATE_KEY,t); save();
   }
-  if(day.date!==t){ day={date:t,autoSold:[]}; saveDay(); }
+  if(day.date!==t){ day={date:t,autoSold:[],extraSold:[]}; saveDay(); }
 }
 // 退勤時間を過ぎたキャストを完売にする（各キャスト1日1回だけ。手動で戻した完売は上書きしない）
 function applyAutoSold(){
@@ -685,11 +706,14 @@ function applyAutoSold(){
   const nowMin=nowJST.getUTCHours()*60+nowJST.getUTCMinutes();
   const done=new Set(day.autoSold);
   let changed=false;
-  for(const c of casts){
+  for(const c of [...casts,...sheetOnlyCasts()]){
     const info=attendMap.get(c.name);
     if(!info||done.has(c.name)) continue;
     const end=timeToMin(info.end);   // 24:00（ラスト）は営業終了まで完売にしない
-    if(end!==9999&&nowMin>end){ c.sold=true; done.add(c.name); changed=true; }
+    if(end!==9999&&nowMin>end){
+      c.sold=true; done.add(c.name); changed=true;
+      if(c.extra) setExtraSold(c.name,true);
+    }
   }
   if(changed){ day.autoSold=[...done]; saveDay(); save(); }
 }
