@@ -56,6 +56,9 @@
   .topImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
     opacity:0;transition:opacity 4s ease-in-out;}
   .topImg.show{opacity:1;}
+  .topShow{touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+  .topShow.quick .topImg{transition-duration:.6s;}
+  .topImg{-webkit-user-drag:none;pointer-events:none;}
 
   /* 表示：本日出勤 */
   .card .cname{position:absolute;left:0;right:0;bottom:0;padding:6px 12px 8px;color:#fff;
@@ -395,17 +398,37 @@ function renderTop(){
   document.getElementById('main').innerHTML=
     `<div class="topShow"><img class="topImg show" src="${PHOTO_BASE}top.jpg" alt="ROYAL LIPS VIP"
       onerror="this.style.display='none'"></div>`;
+  topIdx=0;
   loadTopImages().then(list=>{
     const box=document.querySelector('.topShow');
     if(mode!=='top'||!box||list.length<2||topTimer) return;
     for(const u of list.slice(1)) box.insertAdjacentHTML('beforeend',`<img class="topImg" src="${esc(u)}" alt="">`);
-    let i=0;
-    topTimer=setInterval(()=>{
-      if(!box.isConnected){ stopTopSlides(); return; }
-      const imgs=box.querySelectorAll('.topImg');
-      imgs[i].classList.remove('show'); i=(i+1)%imgs.length; imgs[i].classList.add('show');
-    },TOP_HOLD_MS);
+    // 左右スワイプで次／前の画像へ（すばやくフェード）
+    let sw=null;
+    box.addEventListener('pointerdown',e=>{ sw={x:e.clientX,y:e.clientY,id:e.pointerId}; });
+    box.addEventListener('pointerup',e=>{
+      if(!sw||e.pointerId!==sw.id) return;
+      const dx=e.clientX-sw.x, dy=e.clientY-sw.y; sw=null;
+      if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5) topGo(dx<0?1:-1,true);
+    });
+    box.addEventListener('pointercancel',()=>{ sw=null; });
+    startTopTimer();
   });
+}
+let topIdx=0;
+function startTopTimer(){
+  clearInterval(topTimer);
+  topTimer=setInterval(()=>topGo(1,false),TOP_HOLD_MS);   // 手で動かした後も、そこから15秒後に再開
+}
+function topGo(step,quick){
+  const box=document.querySelector('.topShow');
+  if(!box||!box.isConnected){ stopTopSlides(); return; }
+  const imgs=box.querySelectorAll('.topImg'); if(imgs.length<2) return;
+  box.classList.toggle('quick',!!quick);
+  imgs[topIdx].classList.remove('show');
+  topIdx=(topIdx+step+imgs.length)%imgs.length;
+  imgs[topIdx].classList.add('show');
+  if(quick) startTopTimer();
 }
 
 /* ===== 表示（本日出勤） ===== */
