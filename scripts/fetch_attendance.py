@@ -11,6 +11,7 @@
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -59,7 +60,16 @@ def http_get(url):
 
 def fetch_state(url, pw):
     q = urllib.parse.urlencode({'action': 'get', 'rev': 0, 'pass': pw})
-    body = http_get(url + ('&' if '?' in url else '?') + q)
+    # Apps Script の転送先がまれに一時的な 404 を返すので、少し待ってやり直す
+    for attempt in range(3):
+        try:
+            body = http_get(url + ('&' if '?' in url else '?') + q)
+            break
+        except urllib.error.HTTPError as e:
+            if attempt == 2:
+                raise
+            print(f'利用管理の取得に失敗（HTTP {e.code}）。やり直します…')
+            time.sleep(10 * (attempt + 1))
     try:
         j = json.loads(body)
     except ValueError:
