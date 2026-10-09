@@ -121,6 +121,8 @@ def main():
     # インバウンド対応・条件（利用表アプリで管理。一度も設定されていない間は出力しない）
     casts = state.get('casts', [])
     out = {'date': today, 'list': rows}
+    # 利用表アプリで「非表示」にしたキャスト（受付画面のパネルに出さない）
+    out['hidden'] = [c.get('name', '').strip() for c in casts if c.get('hidePanel')]
     if any('inbound' in c for c in casts):
         out['inbound'] = {c.get('name', '').strip(): c.get('inbMemo', '') or ''
                           for c in casts if c.get('inbound')}

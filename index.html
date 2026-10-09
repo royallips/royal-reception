@@ -438,13 +438,16 @@ function topGo(step,quick){
 function onSheet(c){ return attendMap.has(c.name); }   // 利用表で本日出勤
 // インバウンド対応・条件は利用表アプリで管理（取得できない間は casts.json の値）
 let inboundMap=null;   // 源氏名 → 条件
+// 利用表アプリで「非表示」にしたキャストは、受付画面のどのパネルにも出さない
+let hiddenSet=new Set();
+function shown(c){ return !hiddenSet.has(c.name); }
 function isInbound(c){ return inboundMap?inboundMap.has(c.name):!!c.inbound; }
 function inbMemoOf(c){ return inboundMap?(inboundMap.get(c.name)||''):(c.inbMemo||''); }
 function inboundCasts(todayOnly){
   const byName=(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');
   const registered=new Set(casts.map(c=>c.name));
   const extras=inboundMap?[...inboundMap.keys()].filter(n=>!registered.has(n)).map(extraCast):[];
-  const all=[...casts,...extras].filter(isInbound);
+  const all=[...casts,...extras].filter(c=>isInbound(c)&&shown(c));
   return (todayOnly?all.filter(isAttending):all.filter(c=>!c.sold)).sort(byName);
 }
 function isAttending(c){ return onSheet(c); }
@@ -472,7 +475,7 @@ function shiftLabel(c){
 function timeToMin(t){ const m=/(\d{1,2}):(\d{2})/.exec(t||''); return m?(+m[1])*60+(+m[2]):9999; }
 function todayList(){
   const byName=(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');   // あいうえお順（完売は下）
-  const base=[...casts.filter(isAttending),...sheetOnlyCasts()];
+  const base=[...casts.filter(isAttending),...sheetOnlyCasts()].filter(shown);
   return [...base.filter(c=>!c.sold).sort(byName),...base.filter(c=>c.sold).sort(byName)];
 }
 function viewBarHTML(){
@@ -691,7 +694,7 @@ function showInbPhoto(id){
   document.getElementById('viewer').classList.add('show');
 }
 
-function allCasts(){ return [...casts,...sheetOnlyCasts()].sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja')); }
+function allCasts(){ return [...casts,...sheetOnlyCasts()].filter(shown).sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja')); }
 function renderAllCasts(){
   let html=viewBarHTML()+'<div class="grid">';
   for(const c of allCasts()){
@@ -781,7 +784,8 @@ async function fetchSheetAttendance(){
   const cs=d.casts||[];
   const inbound=cs.some(c=>c.inbound!==undefined)
     ?Object.fromEntries(cs.filter(c=>c.inbound).map(c=>[(c.name||'').trim(),c.inbMemo||''])):null;
-  return {date:today,list,inbound};
+  const hidden=cs.filter(c=>c.hidePanel).map(c=>(c.name||'').trim());
+  return {date:today,list,inbound,hidden};
 }
 async function refreshAttendance(manual){
   const btn=document.getElementById('chSyncBtn');
@@ -803,6 +807,7 @@ async function refreshAttendance(manual){
     const isToday=data.date===todayJST();
     attendMap=new Map(isToday?(data.list||[]).map(x=>[x.name,x]):[]);
     if(data.inbound) inboundMap=new Map(Object.entries(data.inbound));
+    if(data.hidden) hiddenSet=new Set(data.hidden);
     applyAutoSold();
     if(manual){
       const n=casts.filter(isAttending).length;
