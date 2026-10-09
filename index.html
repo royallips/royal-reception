@@ -856,8 +856,7 @@ function renderSettings(){
   // キャストの追加・編集は利用表アプリで行うので、ここは見るだけの一覧
   const list=rosterCasts();
   let html='<div class="setWrap">'
-    +`<div class="setHead"><h2>キャスト一覧 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2></div>`
-    +'<p style="margin:0 0 12px;font-size:12px;color:var(--gray);">キャストの追加・編集・写真は利用表アプリのキャスト管理で行います。</p>';
+    +`<div class="setHead"><h2>キャスト一覧 <span style="font-size:13px;font-weight:500;color:var(--gray);margin-left:8px">${list.length}名</span></h2></div>`;
   if(list.length===0){
     html+='<div class="empty">キャストがいません。</div>';
   }else{
@@ -1120,7 +1119,7 @@ function renderViewerPhoto(c,idx){
   urls.slice(1).forEach((u,k)=>{ if(u) probePhoto(u,ok=>{ avail[k+1]=ok; draw(); }); });
   const media=url?`<img src="${esc(url)}" alt="" ${onerr}>`
     :`<div class="vph" style="background:${tint(c.name)}"><div class="big">${esc(c.name[0]||'')}</div></div>`;
-  const showName=mode!=='customer'&&mode!=='inbound'&&!previewMode;
+  const showName=false;   // 拡大表示では名前を出さない（写真に名前が入っているため）
   body.innerHTML=media+(showName?`<div class="vname">${esc(c.name)}</div>`:'');
 }
 function switchViewerPhoto(idx){
