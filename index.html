@@ -264,11 +264,7 @@
     </div>
     <div class="inbToggle">
       <label>インバウンド対応</label>
-      <button id="fInbound" class="" onclick="toggleFInbound()">対応しない</button>
-    </div>
-    <div class="field" id="inbMemoWrap" style="display:none">
-      <label>対応条件</label>
-      <input type="text" id="fInbMemo" placeholder="条件を入力（任意）" maxlength="30">
+      <span id="fInbInfo" style="font-size:13px;color:var(--gray);">利用表アプリのキャスト編集で設定します</span>
     </div>
     <div class="sheetActs">
       <button class="del" id="editDel" onclick="deleteCast()">削除</button>
@@ -433,19 +429,33 @@ function topGo(step,quick){
 
 /* ===== 表示（本日出勤） ===== */
 function onSheet(c){ return attendMap.has(c.name); }   // 利用表で本日出勤
+// インバウンド対応・条件は利用表アプリで管理（取得できない間は casts.json の値）
+let inboundMap=null;   // 源氏名 → 条件
+function isInbound(c){ return inboundMap?inboundMap.has(c.name):!!c.inbound; }
+function inbMemoOf(c){ return inboundMap?(inboundMap.get(c.name)||''):(c.inbMemo||''); }
+function inboundCasts(todayOnly){
+  const byName=(a,b)=>(a.name||'').localeCompare((b.name||''),'ja');
+  const registered=new Set(casts.map(c=>c.name));
+  const extras=inboundMap?[...inboundMap.keys()].filter(n=>!registered.has(n)).map(extraCast):[];
+  const all=[...casts,...extras].filter(isInbound);
+  return (todayOnly?all.filter(isAttending):all.filter(c=>!c.sold)).sort(byName);
+}
 function isAttending(c){ return onSheet(c); }
 // 利用表で本日利用なのに設定タブに未登録のキャストも、写真（img/源氏名.jpg）で自動表示する。
 // 完売状態はその日だけ day.extraSold に保存する
 const extraCasts=new Map();   // 源氏名 → 仮のキャスト
+function extraCast(name){
+  let c=extraCasts.get(name);
+  if(!c){ c={id:'sheet:'+name,name,photo:photoUrl(name),photos:[photoUrl(name)],photoIdx:0,extra:true}; extraCasts.set(name,c); }
+  c.sold=(day.extraSold||[]).includes(name);
+  return c;
+}
 function sheetOnlyCasts(){
   const registered=new Set(casts.map(c=>c.name));
   const list=[];
   for(const name of attendMap.keys()){
     if(registered.has(name)) continue;
-    let c=extraCasts.get(name);
-    if(!c){ c={id:'sheet:'+name,name,photo:photoUrl(name),photos:[photoUrl(name)],photoIdx:0,extra:true}; extraCasts.set(name,c); }
-    c.sold=(day.extraSold||[]).includes(name);
-    list.push(c);
+    list.push(extraCast(name));
   }
   return list;
 }
@@ -620,10 +630,7 @@ Penetrative sex and anal services are not available at this establishment.`,
 本店禁止性交及肛交服务。`,
 };
 function renderInbound(){
-  const base=inbMode==='today'
-    ? casts.filter(c=>c.inbound&&isAttending(c))
-    : casts.filter(c=>c.inbound&&!c.sold);
-  const list=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  const list=inboundCasts(inbMode==='today');
   let html=`<div class="chBar">
     <button class="chBtn ${inbMode==='today'?'active':''}" onclick="setInbMode('today')">本日利用</button>
     <button class="chBtn ${inbMode==='all'?'active':''}" onclick="setInbMode('all')" style="margin-left:8px">全員表示</button>
@@ -648,7 +655,7 @@ function renderInbound(){
     for(const c of list){
       html+=`<div style="display:flex;flex-direction:column;justify-content:center;padding:7px 10px;border-bottom:1px solid var(--line);">
         <div style="font-size:14px;font-weight:700;color:var(--ink);">${esc(c.name||'')}</div>
-        <div style="font-size:12px;color:${c.inbMemo?'var(--gray)':'var(--line)'};margin-top:1px;">${c.inbMemo?esc(c.inbMemo):'—'}</div>
+        <div style="font-size:12px;color:${inbMemoOf(c)?'var(--gray)':'var(--line)'};margin-top:1px;">${inbMemoOf(c)?esc(inbMemoOf(c)):'—'}</div>
       </div>`;
     }
     html+='</div>';
@@ -673,10 +680,7 @@ function inbCardHTML(c){
 function showInbPhoto(id){
   const c=find(id); if(!c) return;
   viewerInbound=true; viewerCastId=id;
-  const base=inbMode==='today'
-    ? casts.filter(c=>c.inbound&&isAttending(c))
-    : casts.filter(c=>c.inbound&&!c.sold);
-  viewerList=base.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
+  viewerList=inboundCasts(inbMode==='today');
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
 }
@@ -767,7 +771,11 @@ async function fetchSheetAttendance(){
     const st=fmtSheetTime(r.start), en=fmtSheetTime((r.start2?r.end2:r.end)||'L');   // 中抜けは最初〜最後
     list.push({name,start:st,end:en,shiftTime:st+'〜'+en});
   }
-  return {date:today,list};
+  // インバウンド対応（利用表アプリで一度も設定していない間は null → casts.json を使う）
+  const cs=d.casts||[];
+  const inbound=cs.some(c=>c.inbound!==undefined)
+    ?Object.fromEntries(cs.filter(c=>c.inbound).map(c=>[(c.name||'').trim(),c.inbMemo||''])):null;
+  return {date:today,list,inbound};
 }
 async function refreshAttendance(manual){
   const btn=document.getElementById('chSyncBtn');
@@ -788,6 +796,7 @@ async function refreshAttendance(manual){
     }
     const isToday=data.date===todayJST();
     attendMap=new Map(isToday?(data.list||[]).map(x=>[x.name,x]):[]);
+    if(data.inbound) inboundMap=new Map(Object.entries(data.inbound));
     applyAutoSold();
     if(manual){
       const n=casts.filter(isAttending).length;
@@ -881,17 +890,6 @@ function updateEditPhoto(){
   if(name){ wrap.style.display='block'; img.src=photoUrl(name); }
   else { wrap.style.display='none'; img.src=''; }
 }
-function setFInbound(val){
-  const btn=document.getElementById('fInbound');
-  btn.dataset.val=val?'1':'0';
-  btn.textContent=val?'対応する':'対応しない';
-  btn.className=val?'on':'';
-  document.getElementById('inbMemoWrap').style.display=val?'block':'none';
-  if(!val) document.getElementById('fInbMemo').value='';
-}
-function toggleFInbound(){
-  setFInbound(document.getElementById('fInbound').dataset.val!=='1');
-}
 function toggleFMatt(){
   const checked=document.getElementById('fMatt').checked;
   document.getElementById('mattMemoWrap').style.display=checked?'block':'none';
@@ -903,8 +901,7 @@ function openAdd(){ editId=null;
   document.getElementById('editDel').style.display='none';
   document.getElementById('nameErr').style.display='none';
   document.getElementById('editPhotoWrap').style.display='none';
-  setFInbound(false);
-  document.getElementById('fInbMemo').value='';
+  document.getElementById('fInbInfo').textContent='利用表アプリのキャスト編集で設定します';
   document.getElementById('fMatt').checked=false;
   document.getElementById('mattMemoWrap').style.display='none';
   document.getElementById('fMattMemo').value='';
@@ -915,8 +912,7 @@ function openEdit(id){ const c=find(id); if(!c)return; editId=id;
   document.getElementById('fName').value=c.name;
   document.getElementById('editDel').style.display='block';
   document.getElementById('nameErr').style.display='none';
-  setFInbound(!!c.inbound);
-  document.getElementById('fInbMemo').value=c.inbMemo||'';
+  document.getElementById('fInbInfo').textContent=(isInbound(c)?'対応する'+(inbMemoOf(c)?'（'+inbMemoOf(c)+'）':''):'対応しない')+' ・ 利用表アプリで変更';
   document.getElementById('fMatt').checked=!!c.matt;
   document.getElementById('mattMemoWrap').style.display=c.matt?'block':'none';
   document.getElementById('fMattMemo').value=c.mattMemo||'';
@@ -927,8 +923,8 @@ function saveCast(){
   if(!name){ document.getElementById('nameErr').style.display='block'; return; }
   const photo=photoUrl(name);
   const photos=[photo];
-  const inbound=document.getElementById('fInbound').dataset.val==='1';
-  const inbMemo=inbound?document.getElementById('fInbMemo').value.trim():'';
+  const old=editId?find(editId):null;   // インバウンドは利用表アプリで管理するので、ここでは変えない
+  const inbound=!!(old&&old.inbound), inbMemo=(old&&old.inbMemo)||'';
   const matt=document.getElementById('fMatt').checked;
   const mattMemo=matt?document.getElementById('fMattMemo').value.trim():'';
   if(editId){

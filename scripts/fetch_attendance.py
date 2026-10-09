@@ -118,7 +118,12 @@ def main():
     rows.sort(key=lambda x: (x['_s'], x['name']))
     for x in rows:
         del x['_s']
+    # インバウンド対応・条件（利用表アプリで管理。一度も設定されていない間は出力しない）
+    casts = state.get('casts', [])
     out = {'date': today, 'list': rows}
+    if any('inbound' in c for c in casts):
+        out['inbound'] = {c.get('name', '').strip(): c.get('inbMemo', '') or ''
+                          for c in casts if c.get('inbound')}
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
         f.write('\n')
