@@ -292,7 +292,7 @@ let casts = [];          // {id,name,photo,sold}
 let mode = 'customer';
 let editId = null;
 let attendMap = new Map();   // attend.json の本日出勤 源氏名 → {start,end,shiftTime}
-let viewMode = 'today';      // 表示タブ: 'today' | 'matt' | 'all'
+let viewMode = 'today';      // 表示タブ: 'today' | 'matt'
 const STORE_KEY = 'royal_reception_v2';
 const SOLD_DATE_KEY = 'royal_reception_sold_date';
 const DELETED_KEY = 'royal_reception_deleted';
@@ -495,14 +495,12 @@ function viewBarHTML(){
   return `<div class="chBar">
     <button class="chBtn ${viewMode==='today'?'active':''}" onclick="setViewMode('today')">本日利用</button>
     <button class="chBtn ${viewMode==='matt'?'active':''}" onclick="setViewMode('matt')" style="margin-left:8px">マット対応</button>
-    <button class="chBtn ${viewMode==='all'?'active':''}" onclick="setViewMode('all')" style="margin-left:8px">一覧</button>
     <button id="chSyncBtn" class="chBtn" onclick="refreshAttendance(true)" style="margin-left:8px">更新</button>
   </div>`;
 }
 function setViewMode(m){ viewMode=m; renderCustomer(); }
 function renderCustomer(){
   if(viewMode==='matt'){ renderMattList(); return; }
-  if(viewMode==='all'){ renderAllCasts(); return; }
   const list=todayList();
   let html=viewBarHTML();
   if(list.length===0){
@@ -707,23 +705,6 @@ function showInbPhoto(id){
   document.getElementById('viewer').classList.add('show');
 }
 
-function allCasts(){
-  const seen=new Set();
-  return [...rosterCasts(),...sheetOnlyCasts()].filter(c=>!seen.has(c.name)&&seen.add(c.name)).filter(shown)
-    .sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ja'));
-}
-function renderAllCasts(){
-  let html=viewBarHTML()+'<div class="grid">';
-  for(const c of allCasts()){
-    const inner=c.photo
-      ?`<img class="photo" src="${esc(c.photo)}" alt="" ${imgErr()}>`
-      :`<div class="ph" style="background:${tint(c.name)}">${esc(c.name[0]||'')}</div>`;
-    html+=`<div class="card" data-id="${esc(c.id)}">${inner}<div class="scrim"></div><div class="cname">${esc(c.name)}</div></div>`;
-  }
-  html+='</div>';
-  document.getElementById('main').innerHTML=html;
-  attachDnd();
-}
 function renderMattList(){
   const list=todayList().filter(isMatt);
   let html=viewBarHTML();
@@ -1065,7 +1046,6 @@ function showPhoto(id){
   viewerCastId=id;
   viewerList=mode==='settings' ? rosterCasts()
     : mode!=='customer' ? []
-    : viewMode==='all' ? allCasts()
     : todayList().filter(c=>viewMode!=='matt'||isMatt(c));
   renderViewerPhoto(c,0);
   document.getElementById('viewer').classList.add('show');
