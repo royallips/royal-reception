@@ -499,7 +499,7 @@ function todayCardHTML(c){
   const id=JSON.stringify(c.id);
   const time=shiftLabel(c);
   return `<div class="card ${c.sold?'sold':''}" data-id="${esc(c.id)}">${inner}
-    ${c.sold?'<div class="soldMark">完売</div>':''}
+    ${c.sold?'<div class="soldMark">受付終了</div>':''}
     <div class="scrim"></div><div class="cname">${esc(c.name)}${time?`<span class="ctime">${esc(time)}</span>`:''}</div>
     <button class="soldBtn ${c.sold?'active':''}" onclick='toggleSold(${id},event)'>${c.sold?'完売':'利用'}</button></div>`;
 }
