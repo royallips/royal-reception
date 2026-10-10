@@ -389,23 +389,25 @@ let topTimer=null, topImgs=null;
 function stopTopSlides(){ clearInterval(topTimer); topTimer=null; }
 async function loadTopImages(){
   if(topImgs) return topImgs;
-  const list=[PHOTO_BASE+'top.jpg'];
-  for(let i=2;i<=30;i++){
-    const u=PHOTO_BASE+'top'+i+'.jpg';
+  const all=[];
+  for(let i=1;i<=30;i++){
+    const u=PHOTO_BASE+(i===1?'top':'top'+i)+'.jpg';
     if(!await new Promise(r=>probePhoto(u,r))) break;   // 番号が途切れたらそこまで
-    list.push(u);
+    all.push(u);
   }
-  return topImgs=list;
+  // 利用表アプリで「非表示」にした番号（img/top.json の hidden）は飛ばす
+  let hidden=[];
+  try{ const r=await fetch(PHOTO_BASE+'top.json?t='+Date.now(),{cache:'no-store'}); if(r.ok) hidden=(await r.json()).hidden||[]; }catch(e){}
+  return topImgs=all.filter((u,i)=>!hidden.includes(i+1));
 }
 function renderTop(){
-  document.getElementById('main').innerHTML=
-    `<div class="topShow"><img class="topImg show" src="${PHOTO_BASE}top.jpg" alt="ROYAL LIPS VIP"
-      onerror="this.style.display='none'"></div>`;
+  document.getElementById('main').innerHTML=`<div class="topShow"></div>`;
   topIdx=0;
   loadTopImages().then(list=>{
     const box=document.querySelector('.topShow');
-    if(mode!=='top'||!box||list.length<2||topTimer) return;
-    for(const u of list.slice(1)) box.insertAdjacentHTML('beforeend',`<img class="topImg" src="${esc(u)}" alt="">`);
+    if(mode!=='top'||!box||box.children.length) return;
+    list.forEach((u,i)=>box.insertAdjacentHTML('beforeend',`<img class="topImg${i?'':' show'}" src="${esc(u)}" alt="ROYAL LIPS VIP">`));
+    if(list.length<2||topTimer) return;
     // 左右スワイプで次／前の画像へ（すばやくフェード）
     let sw=null;
     box.addEventListener('pointerdown',e=>{ sw={x:e.clientX,y:e.clientY,id:e.pointerId}; });
